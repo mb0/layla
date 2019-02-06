@@ -35,7 +35,7 @@ var testLabel2 = `(stage :w 464 :h 480 :gap 32 :font.size 8 :pad [32 40 32 40]
 	(text 'Datum:')    (text (time.date_long $now))
 )
 (qrcode :x 268 :y 120 :code.name 'h' :code.wide 4 (str.upper ('A' 'http://vendor.url/' $batch)))
-(barcode :x 8 :y 320 :h 124 :code.name 'ean128' :code.human 2 :code.narrow 2 '10' $batch)
+(barcode :x 8 :y 320 :h 124 :code.name 'ean128' :code.human 2 :code.wide 2 '10' $batch)
 )`
 
 func TestLayla(t *testing.T) {

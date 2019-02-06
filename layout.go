@@ -85,7 +85,7 @@ func (l *layouter) layout(o *Node, b Box, stack []*Node) error {
 			ca := a
 			cols := o.Cols
 			if len(cols) == 0 {
-				cols = []int{ca.W}
+				cols = []float64{ca.W}
 			}
 			ci := i % len(cols)
 			for _, cw := range cols[:ci] {
