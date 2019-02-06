@@ -9,10 +9,8 @@ import (
 	"image/gif"
 
 	"github.com/boombuler/barcode"
-	"github.com/boombuler/barcode/code128"
-	"github.com/boombuler/barcode/ean"
-	"github.com/boombuler/barcode/qr"
 	"github.com/mb0/layla"
+	"github.com/mb0/layla/bcode"
 	"github.com/mb0/xelf/bfr"
 )
 
@@ -56,7 +54,7 @@ func RenderBfr(b bfr.B, n *layla.Node) error {
 }
 
 func writeBarcode(b bfr.B, d *layla.Node) error {
-	img, err := getBarcode(d)
+	img, err := bcode.Barcode(d)
 	if err != nil {
 		return err
 	}
@@ -71,32 +69,6 @@ func writeBarcode(b bfr.B, d *layla.Node) error {
 	}
 	fmt.Fprintf(b, `" alt="%s">`, d.Kind)
 	return nil
-}
-
-func getBarcode(d *layla.Node) (barcode.Barcode, error) {
-	switch d.Code.Name {
-	case "ean128":
-		return code128.Encode(d.Data)
-	case "ean8", "ean13":
-		return ean.Encode(d.Data)
-	}
-	if d.Kind != "qrcode" {
-		return nil, fmt.Errorf("unknown code name %q", d.Code.Name)
-	}
-	ec := getErrorCorrection(d.Code.Name)
-	return qr.Encode(d.Data, ec, qr.Auto)
-}
-
-func getErrorCorrection(name string) qr.ErrorCorrectionLevel {
-	switch name {
-	case "l":
-		return qr.L
-	case "m":
-		return qr.M
-	case "q":
-		return qr.Q
-	}
-	return qr.H
 }
 
 // writeDataURL writes the given img as monochrome gif data url to b
