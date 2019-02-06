@@ -3,13 +3,14 @@
 package main
 
 import (
-	"bufio"
+	"bytes"
+	"io/ioutil"
 	"log"
-	"os"
 	"time"
 
 	"github.com/mb0/layla"
 	"github.com/mb0/layla/html"
+	"github.com/mb0/layla/pdf"
 	"github.com/mb0/xelf/lit"
 	"github.com/mb0/xelf/utl"
 )
@@ -43,15 +44,27 @@ func main() {
 	if err != nil {
 		log.Fatalf("exec error: %v", err)
 	}
-	b := bufio.NewWriter(os.Stdout)
-	b.WriteString(`<body style="background-color: grey">`)
-	err = html.RenderBfr(b, n)
-	if err != nil {
-		log.Fatalf("render error: %v", err)
+	{ // write html
+		var b bytes.Buffer
+		b.WriteString(`<body style="background-color: grey">`)
+		err = html.RenderBfr(&b, n)
+		if err != nil {
+			log.Fatalf("render html error: %v", err)
+		}
+		b.WriteString(`</body>`)
+		err = ioutil.WriteFile("example.html", b.Bytes(), 0644)
+		if err != nil {
+			log.Fatalf("write html error: %v", err)
+		}
 	}
-	b.WriteString(`</body>`)
-	err = b.Flush()
-	if err != nil {
-		log.Fatalf("flush error: %v", err)
+	{ // write pdf
+		doc, err := pdf.Render(n)
+		if err != nil {
+			log.Fatalf("render error: %v", err)
+		}
+		err = doc.OutputFileAndClose("example.pdf")
+		if err != nil {
+			log.Fatalf("write error: %v", err)
+		}
 	}
 }
