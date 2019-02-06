@@ -15,20 +15,20 @@ import (
 )
 
 var raw = `
-(stage :w 464 :h 480 :gap 32 :font.size 8 :pad [30 30 00]
-	(vbox :w 300 :sub.h 72
+(stage :w 58 :h 60 :gap 4 :font.size 1 :pad [4 4 00]
+	(vbox :w 37.5 :sub.h 9
 		(group (text 'Produkt:')
-			(text :y 24 :font.size 16 $title))
+			(text :y 3 :font.size 2 $title))
 		(group (text 'Anbieter:')
-			(text :y 24 :font.size 16 $vendor))
+			(text :y 3 :font.size 2 $vendor))
 		(group (text 'Batch:')
-			(text :y 24 :font.size 16 $batch))
+			(text :y 3 :font.size 2 $batch))
 		(group (text 'Datum:')
-			(text :y 24 :font.size 16 (time.date_long $now)))
+			(text :y 3 :font.size 2 (time.date_long $now)))
 	)
-	(qrcode :x 300 :y 166 :code ['H' 00 4]
+	(qrcode :x 37.5 :y 20.75 :code ['H' 0 0.5]
 		'https://vendor.url/' $batch)
-	(barcode :x 10 :y 320 :h 124 :code ['ean128' 2 2 0]
+	(barcode :x 1.125 :y 40 :h 15.5 :code ['ean128' 2 0.25]
 		'10' $batch)
 )`
 
@@ -44,10 +44,12 @@ func main() {
 		log.Fatalf("exec error: %v", err)
 	}
 	b := bufio.NewWriter(os.Stdout)
+	b.WriteString(`<body style="background-color: grey">`)
 	err = html.RenderBfr(b, n)
 	if err != nil {
 		log.Fatalf("render error: %v", err)
 	}
+	b.WriteString(`</body>`)
 	err = b.Flush()
 	if err != nil {
 		log.Fatalf("flush error: %v", err)

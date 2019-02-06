@@ -22,31 +22,32 @@ func RenderBfr(b bfr.B, n *layla.Node) error {
 	if err != nil {
 		return err
 	}
-	b.WriteString(`<div class="layla">`)
-	b.WriteString(`<style>
-.layla { position: relative }
-.layla div { position: absolute; box-sizing: border-box }
-</style>`)
+	fmt.Fprintf(b, `<div class="layla" style="position:relative;background-color:white;width:%gmm;height:%gmm">`, n.W, n.H)
+	b.WriteString(`<style>.layla div { position: absolute; box-sizing: border-box; font-size: 8pt }</style>`)
 	for _, d := range draw {
 		b.WriteString(`<div style="`)
-		fmt.Fprintf(b, "left:%dpx;", d.X)
-		fmt.Fprintf(b, "top:%dpx;", d.Y)
-		fmt.Fprintf(b, "width:%dpx;", d.W)
-		fmt.Fprintf(b, "height:%dpx;", d.H)
+		fmt.Fprintf(b, "left:%gmm;", d.X)
+		fmt.Fprintf(b, "top:%gmm;", d.Y)
+		fmt.Fprintf(b, "width:%gmm;", d.W)
+		fmt.Fprintf(b, "height:%gmm;", d.H)
 		switch d.Kind {
 		case "ellipse":
-			fmt.Fprintf(b, "border:%dpx solid black;", d.Line)
-			x, y := d.W/2+d.Line, d.H/2+d.Line
-			fmt.Fprintf(b, "border-radius:%dpx / %dpx;", x, y)
+			fmt.Fprintf(b, "border:%gmm solid black;", d.Line)
+			x, y := d.W/2+float64(d.Line), d.H/2+float64(d.Line)
+			fmt.Fprintf(b, "border-radius:%gmm / %gmm;", x, y)
 			b.WriteString(`">`)
 		case "rect":
-			fmt.Fprintf(b, "border:%dpx solid black;", d.Line)
+			fmt.Fprintf(b, "border:%gmm solid black;", d.Line)
 			b.WriteString(`">`)
 		case "text", "block", "styled":
 			b.WriteString(`">`)
 			b.WriteString(d.Data)
 		case "barcode", "qrcode":
 			b.WriteString(`">`)
+			err = writeBarcode(b, d)
+			if err != nil {
+				return err
+			}
 		}
 		b.WriteString(`</div>`)
 	}
@@ -59,11 +60,11 @@ func writeBarcode(b bfr.B, d *layla.Node) error {
 	if err != nil {
 		return err
 	}
-	img, err = barcode.Scale(img, d.W, d.H)
+	img, err = barcode.Scale(img, int(d.W*8), int(d.H*8))
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(b, `<img width="%d" height="%d" src="`, d.W, d.H)
+	fmt.Fprintf(b, `<img style="width:%gmm; height:%gmm" src="`, d.W, d.H)
 	err = writeDataURL(b, img)
 	if err != nil {
 		return err
