@@ -54,25 +54,25 @@ func TestLayla(t *testing.T) {
 	}{
 		{testLabel1, ""},
 		{testLabel2, ""},
-		{`(stage :w 360 :h 360 (rect))`, `{+kind 'rect' +w 360 +h 360}`},
-		{`(stage :w 360 :h 360 (rect :h 100))`, `{+kind 'rect' +w 360 +h 100}`},
+		{`(stage :w 360 :h 360 (rect))`, `{kind:'rect' w:360 h:360}`},
+		{`(stage :w 360 :h 360 (rect :h 100))`, `{kind:'rect' w:360 h:100}`},
 		{`(stage :w 360 :h 360 :pad [5 5 5 5] (rect :h 100))`,
-			`{+kind 'rect' +x 5 +y 5 +w 350 +h 100}`},
+			`{kind:'rect' x:5 y:5 w:350 h:100}`},
 		{`(stage :w 360 :h 360 :pad [5 5 5 5] (rect :h 100 :mar [3 3 3 3]))`,
-			`{+kind 'rect' +x 8 +y 8 +w 344 +h 100}`},
+			`{kind:'rect' x:8 y:8 w:344 h:100}`},
 		{`(vbox :w 360 :h 360 :sub.h 36 (rect)(rect :h 72)(rect))`, "" +
-			`{+kind 'rect' +w 360 +h 36}` +
-			`{+kind 'rect' +y 36 +w 360 +h 72}` +
-			`{+kind 'rect' +y 108 +w 360 +h 36}`},
+			`{kind:'rect' w:360 h:36}` +
+			`{kind:'rect' y:36 w:360 h:72}` +
+			`{kind:'rect' y:108 w:360 h:36}`},
 		{`(vbox :w 300 (table :sub.h 40 :cols [100,200]` +
 			`(text 'a:') (text '1')` +
 			`(text 'b:') (text '2'))` +
 			`(text :h 30 'end'))`, "" +
-			`{+kind 'text' +w 100 +h 40 +data 'a:'}` +
-			`{+kind 'text' +x 100 +w 200 +h 40 +data '1'}` +
-			`{+kind 'text' +y 40 +w 100 +h 40 +data 'b:'}` +
-			`{+kind 'text' +x 100 +y 40 +w 200 +h 40 +data '2'}` +
-			`{+kind 'text' +y 80 +w 300 +h 30 +data 'end'}`},
+			`{kind:'text' w:100 h:40 data:'a:'}` +
+			`{kind:'text' x:100 w:200 h:40 data:'1'}` +
+			`{kind:'text' y:40 w:100 h:40 data:'b:'}` +
+			`{kind:'text' x:100 y:40 w:200 h:40 data:'2'}` +
+			`{kind:'text' y:80 w:300 h:30 data:'end'}`},
 	}
 	for _, test := range tests {
 		n, err := ExecuteString(prog, test.raw)
