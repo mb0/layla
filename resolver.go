@@ -64,38 +64,34 @@ func hasData(sym string) bool {
 
 func resolveNode(c *exp.Ctx, env exp.Env, e *exp.Expr) (exp.El, error) {
 	o := &Node{Kind: e.Name}
-	l, tail, err := utl.ParseNode(c, env, e, o)
+	var r utl.NodeRules
+	if hasData(e.Name) {
+		r.Tail.KeySetter = func(n utl.Node, _ string, el lit.Lit) error {
+			return lit.AssignTo(el, &o.Data)
+		}
+	} else if hasList(e.Name) {
+		r.Tail.KeyPrepper = utl.ListPrepper
+		r.Tail.KeySetter = func(n utl.Node, _ string, list lit.Lit) error {
+			for _, el := range list.(lit.List) {
+				co, ok := getPtr(el).(*Node)
+				if !ok {
+					return fmt.Errorf("not a layla node %T", el)
+				}
+				inheritAttr(o, co)
+				o.List = append(o.List, co)
+			}
+			return nil
+		}
+	}
+	err := utl.ParseNode(c, env, e.Args, o, r)
 	if err != nil {
 		return e, err
 	}
-	// resolve tail
-	if hasData(o.Kind) {
-		o.Data, err = resolveStr(c, env, tail)
-		if err != nil {
-			return e, fmt.Errorf("%v on resolveStr", err)
-		}
-	} else if hasList(o.Kind) {
-		for _, child := range tail {
-			cl, err := c.Resolve(env, child)
-			if err != nil {
-				return e, fmt.Errorf("%v, on resolve child %s", err, child)
-			}
-
-			co, ok := getPtr(cl).(*Node)
-			if !ok {
-				return e, fmt.Errorf("child is not a layla object %T", cl)
-			}
-			inheritAttr(o, co)
-			o.List = append(o.List, co)
-		}
-	} else if len(tail) > 0 {
-		return e, exp.ErrRogueTail
-	}
-	return l, nil
+	return utl.GetNode(o)
 }
 
 func getPtr(e exp.El) interface{} {
-	if a, ok := e.(lit.Assignable); ok {
+	if a, ok := e.(utl.Node); ok {
 		return a.Ptr()
 	}
 	return nil
