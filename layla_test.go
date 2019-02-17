@@ -13,8 +13,8 @@ var testLabel1 = `(stage :w 360 :h 360 :align 2 :gap 30 :font.size 7 :pad [30 40
 	(text :font.size 12 $title)
 	(block :mar [6 0 6 0] :y 70 :h 76 "Zutaten: " $ingreds)
 	(vbox :y 146 :sub.h 20
-		(text 'Verpackt am: ' (time.date_long $now))
-		(text 'ungeöffnet haltbar bis: ' (time.date_long (time.add_days $now $bbdays)))
+		(text 'Verpackt am: ' (time:date_long $now))
+		(text 'ungeöffnet haltbar bis: ' (time:date_long (time:add_days $now $bbdays)))
 		(text 'Hergestellt für: ' $vendor)
 		(text 'Straße Nr, PLZ Ort')
 	)
@@ -32,9 +32,9 @@ var testLabel2 = `(stage :w 464 :h 480 :gap 32 :font.size 8 :pad [32 40 32 40]
 	(text 'Produkt:')  (text $title)
 	(text 'Anbieter:') (text $vendor)
 	(text 'Quelle:')   (text $batch)
-	(text 'Datum:')    (text (time.date_long $now))
+	(text 'Datum:')    (text (time:date_long $now))
 )
-(qrcode :x 268 :y 120 :code.name 'h' :code.wide 4 (str.upper ('A' 'http://vendor.url/' $batch)))
+(qrcode :x 268 :y 120 :code.name 'h' :code.wide 4 (str:upper ('A' 'http://vendor.url/' $batch)))
 (barcode :x 8 :y 320 :h 124 :code.name 'ean128' :code.human 2 :code.wide 2 '10' $batch)
 )`
 
