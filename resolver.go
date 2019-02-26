@@ -7,6 +7,7 @@ import (
 
 	"github.com/mb0/xelf/exp"
 	"github.com/mb0/xelf/lit"
+	"github.com/mb0/xelf/typ"
 	"github.com/mb0/xelf/utl"
 )
 
@@ -62,7 +63,7 @@ func hasData(sym string) bool {
 	return false
 }
 
-func resolveNode(c *exp.Ctx, env exp.Env, e *exp.Expr) (exp.El, error) {
+func resolveNode(c *exp.Ctx, env exp.Env, e *exp.Expr, hint typ.Type) (exp.El, error) {
 	o := &Node{Kind: e.Name}
 	var r utl.NodeRules
 	if hasData(e.Name) {
@@ -114,7 +115,7 @@ func resolveStr(c *exp.Ctx, env exp.Env, xs []exp.El) (string, error) {
 	if len(xs) > 1 {
 		x = exp.Dyn(xs)
 	}
-	dl, err := c.Resolve(env, x)
+	dl, err := c.Resolve(env, x, typ.Char)
 	if err != nil {
 		return "", err
 	}
