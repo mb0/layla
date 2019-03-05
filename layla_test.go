@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mb0/xelf/exp"
 	"github.com/mb0/xelf/lit"
-	"github.com/mb0/xelf/utl"
 )
 
 var testLabel1 = `(stage :w 360 :h 360 :align 2 :gap 30 :font.size 7 :pad [30 40 30 0]
@@ -39,7 +39,7 @@ var testLabel2 = `(stage :w 464 :h 480 :gap 32 :font.size 8 :pad [32 40 32 40]
 )`
 
 func TestLayla(t *testing.T) {
-	prog := utl.Prog(&lit.Dict{[]lit.Keyed{
+	prog := &exp.ParamScope{exp.NewScope(Env), lit.ObjFromKeyed([]lit.Keyed{
 		{"now", lit.Time(time.Now())},
 		{"title", lit.Str("Produkt")},
 		{"vendor", lit.Str("Firma GmbH")},
@@ -47,7 +47,7 @@ func TestLayla(t *testing.T) {
 		{"ingreds", lit.Str("Zutaten: Zucker, Essig, Salz, Gewürze")},
 		{"bbdays", lit.Int(99)},
 		{"stamp", lit.Str("XY 12345")},
-	}}, Env...)
+	})}
 	tests := []struct {
 		raw  string
 		want string
@@ -77,7 +77,7 @@ func TestLayla(t *testing.T) {
 	for _, test := range tests {
 		n, err := ExecuteString(prog, test.raw)
 		if err != nil {
-			t.Errorf("exec %s error: %v", err, test.raw)
+			t.Errorf("exec %s error: %+v", test.raw, err)
 			continue
 		}
 		draw, err := Layout(n)
