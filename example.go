@@ -11,8 +11,8 @@ import (
 	"github.com/mb0/layla"
 	"github.com/mb0/layla/html"
 	"github.com/mb0/layla/pdf"
+	"github.com/mb0/xelf/exp"
 	"github.com/mb0/xelf/lit"
-	"github.com/mb0/xelf/utl"
 )
 
 var raw = `
@@ -25,7 +25,7 @@ var raw = `
 		(group (text 'Batch:')
 			(text :y 3 :font.size 2 $batch))
 		(group (text 'Datum:')
-			(text :y 3 :font.size 2 (time.date_long $now)))
+			(text :y 3 :font.size 2 (time:date_long $now)))
 	)
 	(qrcode :x 37.5 :y 20.75 :code ['H' 0 0.5]
 		'https://vendor.url/' $batch)
@@ -34,12 +34,12 @@ var raw = `
 )`
 
 func main() {
-	prog := utl.Prog(&lit.Dict{[]lit.Keyed{
+	prog := &exp.ParamScope{exp.NewScope(layla.Env), lit.ObjFromKeyed([]lit.Keyed{
 		{"now", lit.Time(time.Now())},
 		{"title", lit.Str("Produkt")},
 		{"vendor", lit.Str("Firma GmbH")},
 		{"batch", lit.Str("AB19020501")},
-	}}, layla.Env...)
+	})}
 	n, err := layla.ExecuteString(prog, raw)
 	if err != nil {
 		log.Fatalf("exec error: %v", err)
