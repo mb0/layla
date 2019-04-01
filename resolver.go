@@ -66,7 +66,8 @@ var dataRules = utl.NodeRules{
 	Tail: utl.KeyRule{
 		KeyPrepper: utl.DynPrepper,
 		KeySetter: func(n utl.Node, _ string, el lit.Lit) error {
-			return n.SetKey("data", el)
+			_, err := n.SetKey("data", el)
+			return err
 		},
 	},
 }
