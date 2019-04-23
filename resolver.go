@@ -18,7 +18,7 @@ var Env = exp.Builtin{
 
 // ExecuteString parses and executes the expression string s and returns a node or error.
 func ExecuteString(env exp.Env, s string) (*Node, error) {
-	x, err := exp.ParseString(s)
+	x, err := exp.ParseString(env, s)
 	if err != nil {
 		return nil, err
 	}
@@ -34,14 +34,14 @@ func ExecuteString(env exp.Env, s string) (*Node, error) {
 }
 
 // NodeLookup is the resolver lookup for layla node resolvers
-func NodeLookup(sym string) exp.Resolver {
+func NodeLookup(sym string) *exp.Spec {
 	if f := forms[sym]; f != nil {
 		return f
 	}
 	return nil
 }
 
-var forms map[string]*exp.Form
+var forms map[string]*exp.Spec
 
 func init() {
 	t, err := lit.Reflect((*Node)(nil))
@@ -51,13 +51,13 @@ func init() {
 	nodeSig := []typ.Param{{Name: "tags"}, {Name: "rest"}, {Type: t}}
 	listNodes := []string{"stage", "rect", "ellipse", "group", "vbox", "hbox", "table"}
 	dataNodes := []string{"text", "block", "qrcode", "barcode"}
-	forms = make(map[string]*exp.Form, len(listNodes)+len(dataNodes))
+	forms = make(map[string]*exp.Spec, len(listNodes)+len(dataNodes))
 	for _, n := range listNodes {
-		forms[n] = &exp.Form{exp.FormSig(n, nodeSig),
+		forms[n] = &exp.Spec{typ.Form(n, nodeSig),
 			utl.NewNodeResolver(listRules, &Node{Kind: n})}
 	}
 	for _, n := range dataNodes {
-		forms[n] = &exp.Form{exp.FormSig(n, nodeSig),
+		forms[n] = &exp.Spec{typ.Form(n, nodeSig),
 			utl.NewNodeResolver(dataRules, &Node{Kind: n})}
 	}
 }
@@ -77,7 +77,7 @@ var listRules = utl.NodeRules{
 		KeyPrepper: utl.ListPrepper,
 		KeySetter: func(n utl.Node, _ string, list lit.Lit) error {
 			o := getNode(n)
-			for _, el := range list.(lit.List) {
+			for _, el := range list.(lit.Idxr) {
 				c := getNode(el)
 				if c == nil {
 					return cor.Errorf("not a layla node %T", el)
