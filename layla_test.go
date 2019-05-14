@@ -7,6 +7,7 @@ import (
 
 	"github.com/mb0/xelf/exp"
 	"github.com/mb0/xelf/lit"
+	"github.com/mb0/xelf/prx"
 )
 
 var testLabel1 = `(stage :w 360 :h 360 :align 2 :gap 30 :font.size 7 :pad [30 40 30 0]
@@ -87,7 +88,7 @@ func TestLayla(t *testing.T) {
 		}
 		var b strings.Builder
 		for _, d := range draw {
-			dl, err := lit.Adapt(d)
+			dl, err := prx.Adapt(d)
 			if err != nil {
 				t.Errorf("could not adapt %v, error: %v", d, err)
 			}

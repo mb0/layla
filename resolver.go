@@ -4,6 +4,7 @@ import (
 	"github.com/mb0/xelf/cor"
 	"github.com/mb0/xelf/exp"
 	"github.com/mb0/xelf/lit"
+	"github.com/mb0/xelf/prx"
 	"github.com/mb0/xelf/std"
 	"github.com/mb0/xelf/typ"
 	"github.com/mb0/xelf/utl"
@@ -45,7 +46,7 @@ func NodeLookup(sym string) *exp.Spec {
 var forms map[string]*exp.Spec
 
 func init() {
-	t, err := lit.Reflect((*Node)(nil))
+	t, err := prx.Reflect((*Node)(nil))
 	if err != nil {
 		panic(err)
 	}
