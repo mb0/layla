@@ -28,7 +28,7 @@ func ExecuteString(env exp.Env, s string) (*Node, error) {
 	if err != nil {
 		return nil, err
 	}
-	n := getNode(r)
+	n := getNode(r.(*exp.Atom).Lit)
 	if n == nil {
 		return nil, cor.Errorf("expected *layla.Node got %T", r)
 	}
@@ -97,7 +97,7 @@ var listRules = utl.NodeRules{
 	},
 }
 
-func getNode(e exp.El) *Node {
+func getNode(e lit.Lit) *Node {
 	if a, ok := e.(utl.Node); ok {
 		n, _ := a.Ptr().(*Node)
 		return n
