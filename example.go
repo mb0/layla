@@ -16,7 +16,7 @@ import (
 )
 
 var raw = `
-(stage :w 58 :h 60 :gap 4 :font.size 1 :pad [4 4 00]
+(stage :w 58 :h 60 :gap 4 :font.size 1 :pad [4 4 0 0]
 	(vbox :w 37.5 :sub.h 9
 		(group (text 'Produkt:')
 			(text :y 3 :font.size 2 $title))
@@ -34,7 +34,7 @@ var raw = `
 )`
 
 func main() {
-	prog := &exp.ParamScope{exp.NewScope(layla.Env), lit.ObjFromKeyed([]lit.Keyed{
+	prog := &exp.ParamScope{exp.NewScope(layla.Env), lit.RecFromKeyed([]lit.Keyed{
 		{"now", lit.Time(time.Now())},
 		{"title", lit.Str("Produkt")},
 		{"vendor", lit.Str("Firma GmbH")},
