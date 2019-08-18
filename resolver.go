@@ -26,7 +26,7 @@ func ExecuteString(env exp.Env, s string) (*Node, error) {
 	if err != nil {
 		return nil, err
 	}
-	r, err := exp.NewCtx().Eval(env, x, typ.Void)
+	r, err := exp.Eval(env, x)
 	if err != nil {
 		return nil, err
 	}
