@@ -1,6 +1,8 @@
 package layla
 
 import (
+	"strings"
+
 	"github.com/mb0/xelf/cor"
 	"github.com/mb0/xelf/exp"
 	"github.com/mb0/xelf/lit"
@@ -20,11 +22,11 @@ var Env = exp.Builtin{
 
 // ExecuteString parses and executes the expression string s and returns a node or error.
 func ExecuteString(env exp.Env, s string) (*Node, error) {
-	x, err := exp.ParseString(env, s)
+	x, err := exp.Read(strings.NewReader(s))
 	if err != nil {
 		return nil, err
 	}
-	r, err := exp.Execute(env, x)
+	r, err := exp.NewCtx().Eval(env, x, typ.Void)
 	if err != nil {
 		return nil, err
 	}

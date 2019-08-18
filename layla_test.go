@@ -40,7 +40,7 @@ var testLabel2 = `(stage :w 464 :h 480 :gap 32 :font.size 8 :pad [32 40 32 40]
 )`
 
 func TestLayla(t *testing.T) {
-	prog := &exp.ParamScope{exp.NewScope(Env), lit.RecFromKeyed([]lit.Keyed{
+	prog := &exp.ParamEnv{exp.NewScope(Env), lit.RecFromKeyed([]lit.Keyed{
 		{"now", lit.Time(time.Now())},
 		{"title", lit.Str("Produkt")},
 		{"vendor", lit.Str("Firma GmbH")},
