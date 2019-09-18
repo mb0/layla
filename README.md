@@ -25,3 +25,6 @@ License
 
 Copyright (c) Martin Schnabel. All rights reserved.
 Use of the source code is governed by a BSD-style license that can found in the LICENSE file.
+
+This project uses BSD licensed Go fonts for testing (see testdata/README for more info) with
+Copyright (c) 2016 Bigelow & Holmes Inc. All rights reserved.
