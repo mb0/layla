@@ -26,19 +26,30 @@ type Off struct {
 	B float64 `json:"b,omitempty"`
 }
 
-// Apply returns a box result of b subtracted by o.
-func (o *Off) Apply(b Box) Box {
+// Inset returns a box result of b with o substracted.
+func (o *Off) Inset(b Box) Box {
 	if o != nil {
 		b.X += o.L
 		b.Y += o.T
 		b.W -= o.L + o.R
+		b.H -= o.T + o.B
 		if b.W < 0 {
 			b.W = 0
 		}
-		b.H -= o.T + o.B
 		if b.H < 0 {
 			b.H = 0
 		}
+	}
+	return b
+}
+
+// Outset returns a box result of b with o added.
+func (o *Off) Outset(b Box) Box {
+	if o != nil {
+		b.X -= o.L
+		b.Y -= o.T
+		b.W += o.L + o.R
+		b.H += o.T + o.B
 	}
 	return b
 }
@@ -47,6 +58,7 @@ func (o *Off) Apply(b Box) Box {
 type Font struct {
 	Name string  `json:"name,omitempty"`
 	Size float64 `json:"size,omitempty"`
+	Line float64 `json:"line,omitempty"`
 }
 
 // NodeLayout holds all layout related node data
@@ -72,9 +84,10 @@ type Node struct {
 	Kind string `json:"kind"`
 	Box
 	NodeLayout
-	Font *Font   `json:"font,omitempty"`
-	Line float64 `json:"line,omitempty"`
-	Code *Code   `json:"code,omitempty"`
-	Data string  `json:"data,omitempty"`
-	List []*Node `json:"list,omitempty"`
+	Font   *Font   `json:"font,omitempty"`
+	Stroke float64 `json:"stroke,omitempty"`
+	Code   *Code   `json:"code,omitempty"`
+	Data   string  `json:"data,omitempty"`
+	List   []*Node `json:"list,omitempty"`
+	Calc   Box     `json:"-"`
 }

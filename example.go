@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/mb0/layla"
+	"github.com/mb0/layla/font"
 	"github.com/mb0/layla/html"
 	"github.com/mb0/layla/pdf"
 	"github.com/mb0/xelf/exp"
@@ -16,25 +17,30 @@ import (
 )
 
 var raw = `
-(stage :w 58 :h 60 :gap 4 :font.size 1 :pad [4 4 0 0]
-	(vbox :w 37.5 :sub.h 9
+(stage :w 464 :h 480 :gap 32 :font.size 8 :pad [32 32 0 0]
+	(vbox :w 300 :sub.h 72
 		(group (text 'Produkt:')
-			(text :y 3 :font.size 2 $title))
+			(text :y 24 :font.size 10 $title))
 		(group (text 'Anbieter:')
-			(text :y 3 :font.size 2 $vendor))
+			(text :y 24 :font.size 10 $vendor))
 		(group (text 'Batch:')
-			(text :y 3 :font.size 2 $batch))
+			(text :y 24 :font.size 10 $batch))
 		(group (text 'Datum:')
-			(text :y 3 :font.size 2 (time:date_long $now)))
+			(text :y 24 :font.size 10 (time:date_long $now)))
 	)
-	(qrcode :x 37.5 :y 20.75 :code ['H' 0 0.5]
+	(qrcode :x 300 :y 166 :code ['H' 0 4]
 		'https://vendor.url/' $batch)
-	(barcode :x 1.125 :y 40 :h 15.5 :code ['ean128' 2 0.25]
+	(barcode :x 9 :y 320 :h 124.4 :code ['ean128' 2 1]
 		'10' $batch)
 )`
 
 func main() {
-	prog := &exp.ParamScope{exp.NewScope(layla.Env), lit.RecFromKeyed([]lit.Keyed{
+	m := &font.Manager{}
+	err := m.RegisterTTF("", "testdata/Go-Regular.ttf")
+	if err != nil {
+		log.Fatalf("parse font %v", err)
+	}
+	prog := &exp.ParamEnv{exp.NewScope(layla.Env), lit.RecFromKeyed([]lit.Keyed{
 		{"now", lit.Time(time.Now())},
 		{"title", lit.Str("Produkt")},
 		{"vendor", lit.Str("Firma GmbH")},
@@ -47,7 +53,7 @@ func main() {
 	{ // write html
 		var b bytes.Buffer
 		b.WriteString(`<body style="background-color: grey">`)
-		err = html.RenderBfr(&b, n)
+		err = html.RenderBfr(&b, m, n)
 		if err != nil {
 			log.Fatalf("render html error: %v", err)
 		}
@@ -58,7 +64,7 @@ func main() {
 		}
 	}
 	{ // write pdf
-		doc, err := pdf.Render(n)
+		doc, err := pdf.Render(m, n)
 		if err != nil {
 			log.Fatalf("render error: %v", err)
 		}

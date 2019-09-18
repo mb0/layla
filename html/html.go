@@ -7,35 +7,37 @@ import (
 	"fmt"
 	"image"
 	"image/gif"
+	"log"
 
 	"github.com/boombuler/barcode"
 	"github.com/mb0/layla"
 	"github.com/mb0/layla/bcode"
+	"github.com/mb0/layla/font"
 	"github.com/mb0/xelf/bfr"
 )
 
 // RenderBfr renders the node n as HTML to b or returns an error.
-func RenderBfr(b bfr.B, n *layla.Node) error {
-	draw, err := layla.Layout(n)
+func RenderBfr(b bfr.B, man *font.Manager, n *layla.Node) error {
+	draw, err := layla.Layout(man, n)
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(b, `<div class="layla" style="position:relative;background-color:white;width:%fmm;height:%fmm">`, n.W, n.H)
+	fmt.Fprintf(b, `<div class="layla" style="position:relative;background-color:white;width:%fmm;height:%fmm">`, n.W/8, n.H/8)
 	b.WriteString(`<style>.layla div { position: absolute; box-sizing: border-box; font-size: 8pt }</style>`)
 	for _, d := range draw {
 		b.WriteString(`<div style="`)
-		fmt.Fprintf(b, "left:%fmm;", d.X)
-		fmt.Fprintf(b, "top:%fmm;", d.Y)
-		fmt.Fprintf(b, "width:%fmm;", d.W)
-		fmt.Fprintf(b, "height:%fmm;", d.H)
+		fmt.Fprintf(b, "left:%fmm;", d.X/8)
+		fmt.Fprintf(b, "top:%fmm;", d.Y/8)
+		fmt.Fprintf(b, "width:%fmm;", d.W/8)
+		fmt.Fprintf(b, "height:%fmm;", d.H/8)
 		switch d.Kind {
 		case "ellipse":
-			fmt.Fprintf(b, "border:%fmm solid black;", d.Line)
-			x, y := d.W/2+float64(d.Line), d.H/2+float64(d.Line)
+			fmt.Fprintf(b, "border:%fmm solid black;", d.Stroke/8)
+			x, y := d.W/16+float64(d.Stroke), d.H/16+float64(d.Stroke/8)
 			fmt.Fprintf(b, "border-radius:%fmm / %fmm;", x, y)
 			b.WriteString(`">`)
 		case "rect":
-			fmt.Fprintf(b, "border:%fmm solid black;", d.Line)
+			fmt.Fprintf(b, "border:%fmm solid black;", d.Stroke/8)
 			b.WriteString(`">`)
 		case "text", "block", "styled":
 			b.WriteString(`">`)
@@ -58,11 +60,12 @@ func writeBarcode(b bfr.B, d *layla.Node) error {
 	if err != nil {
 		return err
 	}
-	img, err = barcode.Scale(img, int(d.W*8), int(d.H*8))
+	img, err = barcode.Scale(img, int(d.W), int(d.H))
 	if err != nil {
+		log.Printf("scale barcode %f %f", d.W, d.H)
 		return err
 	}
-	fmt.Fprintf(b, `<img style="width:%fmm; height:%fmm" src="`, d.W, d.H)
+	fmt.Fprintf(b, `<img style="width:%fmm; height:%fmm" src="`, d.W/8, d.H/8)
 	err = writeDataURL(b, img)
 	if err != nil {
 		return err

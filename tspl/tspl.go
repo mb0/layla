@@ -8,6 +8,7 @@ import (
 
 	"github.com/mb0/dql/bfr"
 	"github.com/mb0/layla"
+	"github.com/mb0/layla/font"
 )
 
 func dot(f float64) int {
@@ -15,8 +16,8 @@ func dot(f float64) int {
 }
 
 // RenderBfr renders the node n as TSPL to b or returns an error.
-func RenderBfr(b bfr.B, n *layla.Node, extra ...string) error {
-	draw, err := layla.Layout(n)
+func RenderBfr(b bfr.B, man *font.Manager, n *layla.Node, extra ...string) error {
+	draw, err := layla.Layout(man, n)
 	if err != nil {
 		return err
 	}
@@ -35,11 +36,11 @@ func RenderBfr(b bfr.B, n *layla.Node, extra ...string) error {
 		case "ellipse":
 			fmt.Fprintf(b, "ELLIPSE %d,%d,%d,%d,%d\n",
 				dot(d.X), dot(d.Y), dot(d.W), dot(d.H),
-				dot(d.Line))
+				dot(d.Stroke))
 		case "rect":
 			fmt.Fprintf(b, "BOX %d,%d,%d,%d,%d\n",
 				dot(d.X), dot(d.Y), dot(d.X+d.W), dot(d.Y+d.H),
-				dot(d.Line))
+				dot(d.Stroke))
 		case "text":
 			fsize := fontSize(d)
 			fmt.Fprintf(b, "TEXT %d,%d,\"0\",0,%d,%d,%d,%q\n",

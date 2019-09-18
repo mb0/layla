@@ -1,6 +1,7 @@
 package layla
 
 import (
+	"io"
 	"strings"
 
 	"github.com/mb0/xelf/cor"
@@ -22,7 +23,12 @@ var Env = exp.Builtin{
 
 // ExecuteString parses and executes the expression string s and returns a node or error.
 func ExecuteString(env exp.Env, s string) (*Node, error) {
-	x, err := exp.Read(strings.NewReader(s))
+	return Execute(env, strings.NewReader(s))
+}
+
+// Execute parses and executes the expression from reader r and returns a node or error.
+func Execute(env exp.Env, rr io.Reader) (*Node, error) {
+	x, err := exp.Read(rr)
 	if err != nil {
 		return nil, err
 	}
@@ -53,8 +59,9 @@ func init() {
 		panic(err)
 	}
 	nodeSig := []typ.Param{{Name: "tags?"}, {Name: "rest?"}, {Type: t}}
-	listNodes := []string{"stage", "rect", "ellipse", "group", "vbox", "hbox", "table"}
-	dataNodes := []string{"text", "block", "qrcode", "barcode"}
+	listNodes := []string{"stage", "rect", "ellipse", "group", "vbox", "hbox", "table",
+		"page", "extra", "cover", "header", "footer"}
+	dataNodes := []string{"line", "text", "block", "qrcode", "barcode"}
 	forms = make(map[string]*exp.Spec, len(listNodes)+len(dataNodes))
 	for _, n := range listNodes {
 		forms[n] = &exp.Spec{typ.Form(n, nodeSig),
