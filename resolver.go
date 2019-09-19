@@ -90,6 +90,9 @@ var listRules = utl.NodeRules{
 			o := getNode(n)
 			for _, el := range list.(*lit.List).Data {
 				c := getNode(el)
+				if el.IsZero() {
+					continue
+				}
 				if c == nil {
 					return cor.Errorf("not a layla node %T", el)
 				}
