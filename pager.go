@@ -17,9 +17,9 @@ func (x *xpage) collect(n *Node, res []*Node, offy float64) []*Node {
 	var d *Node
 	switch n.Kind {
 	case "text", "block":
-		n.Data = strings.ReplaceAll(n.Data, "µP", x.page)
-		n.Data = strings.ReplaceAll(n.Data, "µT", x.total)
 		d = &Node{Kind: n.Kind, Box: n.Calc, Font: n.Font, Data: n.Data}
+		d.Data = strings.ReplaceAll(d.Data, "µP", x.page)
+		d.Data = strings.ReplaceAll(d.Data, "µT", x.total)
 	case "line":
 		d = &Node{Kind: n.Kind, Box: n.Calc, Stroke: n.Stroke}
 	case "qrcode", "barcode":
