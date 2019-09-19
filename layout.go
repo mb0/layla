@@ -204,8 +204,12 @@ func (l *layouter) vboxLayout(n *Node, stack []*Node) error {
 			w = eb.W
 		}
 	}
-	n.Calc.W = clamp(n.Calc.W, w)
-	n.Calc.H = clamp(n.Calc.H, h)
+	if n.Calc.W <= 0 {
+		n.Calc.W = clamp(n.Calc.W, w)
+	}
+	if n.Calc.H <= 0 {
+		n.Calc.H = clamp(n.Calc.H, h)
+	}
 	return nil
 }
 func (l *layouter) hboxLayout(n *Node, stack []*Node) error {
@@ -228,8 +232,12 @@ func (l *layouter) hboxLayout(n *Node, stack []*Node) error {
 			h = eb.H
 		}
 	}
-	n.Calc.W = clamp(n.Calc.W, w)
-	n.Calc.H = clamp(n.Calc.H, h)
+	if n.Calc.W <= 0 {
+		n.Calc.W = clamp(n.Calc.W, w)
+	}
+	if n.Calc.H <= 0 {
+		n.Calc.H = clamp(n.Calc.H, h)
+	}
 	return nil
 }
 func (l *layouter) tableLayout(n *Node, stack []*Node) error {
@@ -282,7 +290,9 @@ func (l *layouter) tableLayout(n *Node, stack []*Node) error {
 		}
 	}
 	h += rh
-	n.Calc.H = clamp(n.Calc.H, h)
+	if n.Calc.H <= 0 {
+		n.Calc.H = clamp(n.Calc.H, h)
+	}
 	return nil
 }
 
