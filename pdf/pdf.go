@@ -19,18 +19,36 @@ import (
 
 type Doc = gofpdf.Fpdf
 
-func Render(m *font.Manager, n *layla.Node) (*Doc, error) {
-	d := gofpdf.NewCustom(&gofpdf.InitType{
+func NewDoc(n *layla.Node) *Doc {
+	return gofpdf.NewCustom(&gofpdf.InitType{
 		UnitStr: "mm",
 		Size:    gofpdf.SizeType{n.W / 8, n.H / 8},
 	})
+}
+
+func Render(m *font.Manager, n *layla.Node) (*Doc, error) {
+	return RenderTo(NewDoc(n), m, n)
+}
+
+func RenderTo(d *Doc, m *font.Manager, n *layla.Node) (*Doc, error) {
 	d.AddPage()
 	draw, err := layla.Layout(m, n)
 	if err != nil {
 		return nil, err
 	}
+	addFonts(m, d, draw)
+	for _, dn := range draw {
+		err = renderNode(m, d, dn)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return d, d.Error()
+}
+
+func addFonts(m *font.Manager, d *Doc, ns []*layla.Node) error {
 	fs := make(map[string]bool, 8)
-	for _, n := range draw {
+	for _, n := range ns {
 		if n.Font == nil {
 			continue
 		}
@@ -39,7 +57,7 @@ func Render(m *font.Manager, n *layla.Node) (*Doc, error) {
 		}
 		path, err := m.Path(n.Font.Name)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		dir, fname := filepath.Split(path)
 		d.SetFontLocation(dir)
@@ -48,13 +66,7 @@ func Render(m *font.Manager, n *layla.Node) (*Doc, error) {
 		d.AddFont(n.Font.Name, "", descf)
 		fs[n.Font.Name] = true
 	}
-	for _, dn := range draw {
-		err = renderNode(m, d, dn)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return d, d.Error()
+	return nil
 }
 
 func renderNode(m *font.Manager, d *Doc, n *layla.Node) error {
