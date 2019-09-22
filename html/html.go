@@ -32,14 +32,14 @@ func RenderBfr(b bfr.B, man *font.Manager, n *layla.Node) error {
 		fmt.Fprintf(b, "height:%fmm;", d.H/8)
 		switch d.Kind {
 		case "ellipse":
-			fmt.Fprintf(b, "border:%fmm solid black;", d.Stroke/8)
-			x, y := d.W/16+float64(d.Stroke), d.H/16+float64(d.Stroke/8)
+			fmt.Fprintf(b, "border:%fmm solid black;", d.Border.W/8)
+			x, y := d.W/16+d.Border.W, d.H/16+float64(d.Border.W/8)
 			fmt.Fprintf(b, "border-radius:%fmm / %fmm;", x, y)
 			b.WriteString(`">`)
 		case "rect":
-			fmt.Fprintf(b, "border:%fmm solid black;", d.Stroke/8)
+			fmt.Fprintf(b, "border:%fmm solid black;", d.Border.W/8)
 			b.WriteString(`">`)
-		case "text", "block", "styled":
+		case "text":
 			b.WriteString(`">`)
 			b.WriteString(d.Data)
 		case "barcode", "qrcode":

@@ -4,6 +4,7 @@ package pdf
 import (
 	"bytes"
 	"fmt"
+	"image"
 	"image/gif"
 	"path/filepath"
 
@@ -27,18 +28,35 @@ func NewDoc(n *layla.Node) *Doc {
 }
 
 func Render(m *font.Manager, n *layla.Node) (*Doc, error) {
-	return RenderTo(NewDoc(n), m, n)
+	return Renderer{m, nil}.RenderTo(NewDoc(n), n)
 }
 
-func RenderTo(d *Doc, m *font.Manager, n *layla.Node) (*Doc, error) {
-	d.AddPage()
-	draw, err := layla.Layout(m, n)
+func DefaultBarcoder(n *layla.Node) (image.Image, error) {
+	bc, err := bcode.Barcode(n)
 	if err != nil {
 		return nil, err
 	}
-	addFonts(m, d, draw)
+	bc, err = barcode.Scale(bc, int(n.W), int(n.H))
+	if err != nil {
+		return nil, fmt.Errorf("%v %g %g", err, n.W, n.H)
+	}
+	return bc, nil
+}
+
+type Renderer struct {
+	*font.Manager
+	Barcoder func(*layla.Node) (image.Image, error)
+}
+
+func (r Renderer) RenderTo(d *Doc, n *layla.Node) (*Doc, error) {
+	d.AddPage()
+	draw, err := layla.Layout(r.Manager, n)
+	if err != nil {
+		return nil, err
+	}
+	r.addFonts(d, draw)
 	for _, dn := range draw {
-		err = renderNode(m, d, dn)
+		err = r.renderNode(d, dn)
 		if err != nil {
 			return nil, err
 		}
@@ -46,7 +64,7 @@ func RenderTo(d *Doc, m *font.Manager, n *layla.Node) (*Doc, error) {
 	return d, d.Error()
 }
 
-func addFonts(m *font.Manager, d *Doc, ns []*layla.Node) error {
+func (r Renderer) addFonts(d *Doc, ns []*layla.Node) error {
 	fs := make(map[string]bool, 8)
 	for _, n := range ns {
 		if n.Font == nil {
@@ -55,7 +73,7 @@ func addFonts(m *font.Manager, d *Doc, ns []*layla.Node) error {
 		if fs[n.Font.Name] {
 			continue
 		}
-		path, err := m.Path(n.Font.Name)
+		path, err := r.Path(n.Font.Name)
 		if err != nil {
 			return err
 		}
@@ -69,40 +87,86 @@ func addFonts(m *font.Manager, d *Doc, ns []*layla.Node) error {
 	return nil
 }
 
-func renderNode(m *font.Manager, d *Doc, n *layla.Node) error {
+func setupBorder(d *Doc, bw float64, c *layla.Color) float64 {
+	bw = bw / 8
+	d.SetLineWidth(bw)
+	if c == nil {
+		d.SetDrawColor(0, 0, 0)
+	} else {
+		d.SetDrawColor(c.R, c.G, c.B)
+	}
+	return bw
+}
+func drawBorder(d *Doc, b layla.Box, br layla.Border, c *layla.Color) {
+	if br == (layla.Border{}) {
+		return
+	}
+	x1, y1 := b.X/8, b.Y/8
+	x2, y2 := (b.X+b.W)/8, (b.Y+b.H)/8
+	if br.L > 0 {
+		bw := setupBorder(d, br.L, c) / 2
+		d.Line(x1+bw, y1, x1+bw, y2)
+	}
+	if br.T > 0 {
+		bw := setupBorder(d, br.T, c) / 2
+		d.Line(x1, y1+bw, x2, y1+bw)
+	}
+	if br.R > 0 {
+		bw := setupBorder(d, br.R, c) / 2
+		d.Line(x2-bw, y1, x2-bw, y2)
+	}
+	if br.B > 0 {
+		bw := setupBorder(d, br.B, c) / 2
+		d.Line(x1, y2-bw, x2, y2-bw)
+	}
+}
+
+func (r Renderer) renderNode(d *Doc, n *layla.Node) error {
 	switch n.Kind {
 	case "ellipse":
+		b := n.Border.Default(1.6)
+		d.SetLineWidth(b.W / 8)
 		rx, ry := n.W/16, n.H/16
 		d.Ellipse(n.X/8+rx, n.Y/8+ry, rx, ry, 0, "D")
 	case "line":
+		b := n.Border.Default(1.6)
 		d.SetDrawColor(0, 0, 0)
-		d.SetLineWidth(n.Stroke / 8)
-		d.SetLineCapStyle("square")
+		d.SetLineWidth(b.W / 8)
 		x, y := n.X/8, n.Y/8
 		d.Line(x, y, x+n.W/8, y+n.H/8)
 	case "rect":
-		d.Rect(n.X/8, n.Y/8, n.W/8, n.H/8, "D")
-	case "text", "block":
+		b := n.Border.Default(1.6)
+		drawBorder(d, n.Box, b, nil)
+	case "text":
+		br := n.Border.Default(0)
+		drawBorder(d, n.Box, br, nil)
 		d.SetFont(n.Font.Name, "", n.Font.Size)
+		b := n.Pad.Inset(n.Box)
 		res, err := enc(n.Data)
 		if err != nil {
 			return err
 		}
-		d.SetXY(n.X/8, n.Y/8)
+		d.SetXY(b.X/8, b.Y/8)
 		_, lh := d.GetFontSize()
 		if n.Font.Line > 0 {
 			lh *= n.Font.Line
 		}
-		d.MultiCell(n.W/8, lh, res, "", "LA", false)
-		// d.Rect(n.X/8, n.Y/8, n.W/8, n.H/8, "D")
+		align := "LB"
+		switch n.Align {
+		case layla.AlignRight:
+			align = "RB"
+		case layla.AlignCenter:
+			align = "CB"
+		}
+		d.MultiCell(b.W/8, lh, res, "", align, false)
 	case "barcode", "qrcode":
-		bc, err := bcode.Barcode(n)
+		coder := r.Barcoder
+		if coder == nil {
+			coder = DefaultBarcoder
+		}
+		bc, err := coder(n)
 		if err != nil {
 			return err
-		}
-		bc, err = barcode.Scale(bc, int(n.W), int(n.H))
-		if err != nil {
-			return fmt.Errorf("%v %g %g", err, n.W, n.H)
 		}
 		var b bytes.Buffer
 		err = gif.Encode(&b, bc, nil)

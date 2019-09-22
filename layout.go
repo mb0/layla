@@ -17,7 +17,7 @@ func Layout(m *font.Manager, n *Node) ([]*Node, error) {
 		return nil, err
 	}
 	p := newPager(n)
-	err = lay.collect(n, p)
+	err = p.collect(n)
 	if err != nil {
 		return nil, err
 	}
@@ -58,40 +58,12 @@ func newLayouter(m *font.Manager, o *Node) *layouter {
 	return &layouter{Manager: m}
 }
 
-func (l *layouter) collect(n *Node, p *pager) (err error) {
-	var d *Node
-	switch n.Kind {
-	case "text", "block":
-		d = &Node{Kind: n.Kind, Box: n.Calc, Font: n.Font, Data: n.Data}
-	case "line":
-		d = &Node{Kind: n.Kind, Box: n.Calc, Stroke: n.Stroke}
-	case "qrcode", "barcode":
-		d = &Node{Kind: n.Kind, Box: n.Calc, Code: n.Code, Data: n.Data}
-	case "rect", "ellipse":
-		d = &Node{Kind: n.Kind, Box: n.Calc, Stroke: n.Stroke}
-		p.draw(d, n.Mar)
-		fallthrough
-	case "stage", "group", "vbox", "hbox", "table", "page":
-		for _, e := range n.List {
-			err = l.collect(e, p)
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	case "extra", "cover", "header", "footer":
-		return nil
-	}
-	p.draw(d, n.Mar)
-	return nil
-}
-
 // layout sets the calculated absolute box inside the available bounds a and returns
 // the required area including margins.
 // The passed in dimension can be unbounded vertically by setting h <= 0
 func (l *layouter) layout(n *Node, a Box, stack []*Node) (_ Box, err error) {
 	if a.W <= 0 {
-		return n.Calc, cor.Errorf("measure always needs availible width")
+		return n.Calc, cor.Errorf("layout always needs availible width")
 	}
 	m := getMargin(n)
 	ab := m.Inset(a)
@@ -100,7 +72,7 @@ func (l *layouter) layout(n *Node, a Box, stack []*Node) (_ Box, err error) {
 	nb.H = clamp(ab.H, nb.H)
 	n.Calc = nb
 	switch n.Kind {
-	case "text", "block":
+	case "text":
 		err = l.textLayout(n, stack)
 	case "line":
 	case "qrcode":
@@ -110,7 +82,7 @@ func (l *layouter) layout(n *Node, a Box, stack []*Node) (_ Box, err error) {
 			n.Calc.W = nb.H
 		}
 	case "barcode":
-	case "group", "rect", "ellipse":
+	case "box", "rect", "ellipse":
 		n.Calc.H = clampFill(ab.H, nb.H)
 		err = l.freeLayout(n, stack)
 	case "extra", "cover", "header", "footer":
@@ -139,7 +111,8 @@ func (l *layouter) textLayout(n *Node, stack []*Node) error {
 	if err != nil {
 		return cor.Errorf("%v for %q\n\t%d", err, n.Data, len(stack))
 	}
-	cwpt := n.Calc.W * 72 / (25.4 * 8)
+	b := n.Pad.Inset(n.Calc)
+	cwpt := b.W * 72 / (25.4 * 8)
 	txt, h, mw, err := font.Layout(f, n.Data, int(cwpt))
 	if err != nil {
 		return err
@@ -152,8 +125,11 @@ func (l *layouter) textLayout(n *Node, stack []*Node) error {
 	if lh < 8 {
 		lh = lf * float64(h) * 25.4 * 8 / 72
 	}
-	n.Calc.H = clamp(n.Calc.H, math.Ceil(lh*float64(len(txt))))
-	n.Calc.W = clamp(n.Calc.W, math.Ceil(float64(mw)*25.4*8/72))
+	b.H = math.Ceil(lh) * float64(len(txt))
+	b.W = math.Ceil(float64(mw) * 25.4 * 8 / 72)
+	b = n.Pad.Outset(b)
+	n.Calc.H = clamp(n.Calc.H, b.H)
+	n.Calc.W = clamp(n.Calc.W, b.W)
 	n.Data = strings.Join(txt, "\n")
 	n.Font = of
 	return nil
@@ -183,7 +159,7 @@ func (l *layouter) freeLayout(n *Node, stack []*Node) error {
 func (l *layouter) vboxLayout(n *Node, stack []*Node) error {
 	stack = append(stack, n)
 	a := n.Pad.Inset(n.Calc)
-	var w, h float64
+	var h float64
 	for i, e := range n.List {
 		ab := a
 		if n.Sub.H > 0 && e.H <= 0 {
@@ -200,12 +176,13 @@ func (l *layouter) vboxLayout(n *Node, stack []*Node) error {
 		a.Y += y
 		a.H -= y
 		h += y
-		if eb.W > w {
-			w = eb.W
+		e.Calc.W = a.W
+		if e.Mar != nil {
+			e.Calc.W -= e.Mar.L + e.Mar.R
 		}
 	}
 	if n.Calc.W <= 0 {
-		n.Calc.W = clamp(n.Calc.W, w)
+		n.Calc.W = clamp(n.Calc.W, a.W)
 	}
 	if n.Calc.H <= 0 {
 		n.Calc.H = clamp(n.Calc.H, h)
@@ -282,6 +259,10 @@ func (l *layouter) tableLayout(n *Node, stack []*Node) error {
 		}
 		a.W = n.Cols[ci]
 		eb, err := l.layout(e, a, stack)
+		e.Calc.W = a.W
+		if e.Mar != nil {
+			e.Calc.W -= e.Mar.L + e.Mar.R
+		}
 		if err != nil {
 			return err
 		}
@@ -325,7 +306,7 @@ func getMargin(n *Node) Off {
 }
 
 func getFont(stack []*Node) *Font {
-	f := Font{"", 0, 0}
+	f := Font{}
 	for i := len(stack) - 1; i >= 0; i-- {
 		nf := stack[i].Font
 		if nf == nil {

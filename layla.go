@@ -1,5 +1,12 @@
 package layla
 
+const (
+	_           = iota
+	AlignLeft   = 1
+	AlignRight  = 2
+	AlignCenter = 3
+)
+
 // Pos is a simple position consisting of x and y coordinates in mm.
 type Pos struct {
 	X float64 `json:"x,omitempty"`
@@ -54,7 +61,7 @@ func (o *Off) Outset(b Box) Box {
 	return b
 }
 
-// Font holds font all font data related node data
+// Font holds all font data related node data
 type Font struct {
 	Name string  `json:"name,omitempty"`
 	Size float64 `json:"size,omitempty"`
@@ -63,13 +70,12 @@ type Font struct {
 
 // NodeLayout holds all layout related node data
 type NodeLayout struct {
-	Gap   float64   `json:"gap,omitempty"`
-	Mar   *Off      `json:"mar,omitempty"`
-	Pad   *Off      `json:"pad,omitempty"`
-	Rot   int       `json:"rot,omitempty"`
-	Align int       `json:"align,omitempty"`
-	Sub   Dim       `json:"sub,omitempty"`
-	Cols  []float64 `json:"cols,omitempty"`
+	Mar   *Off    `json:"mar,omitempty"`
+	Pad   *Off    `json:"pad,omitempty"`
+	Rot   int     `json:"rot,omitempty"`
+	Align int     `json:"align,omitempty"`
+	Gap   float64 `json:"gap,omitempty"`
+	Sub   Dim     `json:"sub,omitempty"`
 }
 
 // Code holds all qr and barcode related node data
@@ -79,15 +85,48 @@ type Code struct {
 	Wide  float64 `json:"wide,omitempty"`
 }
 
+type Color struct {
+	R int `json:"r,omitempty"`
+	G int `json:"g,omitempty"`
+	B int `json:"b,omitempty"`
+}
+
+type Border struct {
+	W float64 `json:"w,omitempty"`
+	L float64 `json:"l,omitempty"`
+	T float64 `json:"t,omitempty"`
+	R float64 `json:"r,omitempty"`
+	B float64 `json:"b,omitempty"`
+}
+
+func (b Border) Default(w float64) Border {
+	if b.W <= 0 {
+		b.W = w
+	}
+	if b.W > 0 && b.L == 0 && b.T == 0 && b.R == 0 && b.B == 0 {
+		b.L = b.W
+		b.T = b.W
+		b.R = b.W
+		b.B = b.W
+	}
+	return b
+}
+
+type Table struct {
+	Cols []float64 `json:"cols,omitempty"`
+	Head bool      `json:"head,omitempty"`
+}
+
 // Node is a part of the display tree represents all display elements.
 type Node struct {
 	Kind string `json:"kind"`
 	Box
 	NodeLayout
 	Font   *Font   `json:"font,omitempty"`
-	Stroke float64 `json:"stroke,omitempty"`
-	Code   *Code   `json:"code,omitempty"`
-	Data   string  `json:"data,omitempty"`
+	Border Border  `json:"border,omitempty"`
 	List   []*Node `json:"list,omitempty"`
-	Calc   Box     `json:"-"`
+	Table
+	Code  *Code  `json:"code,omitempty"`
+	Data  string `json:"data,omitempty"`
+	Calc  Box    `json:"-"`
 }

@@ -14,14 +14,14 @@ import (
 
 var testLabel1 = `(stage :w 360 :h 360 :align 2 :gap 30 :font.size 7 :pad [30 40 30 0]
 	(text :font.size 12 $title)
-	(block :mar [6 0 6 0] :y 70 :h 76 "Zutaten: " $ingreds)
+	(text :mar [6 0 6 0] :y 70 :h 76 "Zutaten: " $ingreds)
 	(vbox :y 146 :sub.h 20
 		(text 'Verpackt am: ' (time:date_long $now))
 		(text 'ungeöffnet haltbar bis: ' (time:date_long (time:add_days $now $bbdays)))
 		(text 'Hergestellt für: ' $vendor)
 		(text 'Straße Nr, PLZ Ort')
 	)
-	(ellipse :y 246 :w 100 :h 66 :stroke 2
+	(ellipse :y 246 :w 100 :h 66 :border [2]
 		(vbox :y 9 :sub.h 18 :font.size 6
 			(text "DE")
 			(text $stamp)
@@ -69,7 +69,7 @@ func TestLayla(t *testing.T) {
 		{`(stage :w 360 :h 360 :pad [5 5 5 5] (rect :h 100))`,
 			`{kind:'rect' x:5 y:5 w:350 h:100}`},
 		{`(stage :w 360 :h 360 :pad [5 5 5 5] (rect :h 100 :mar [3 3 3 3]))`,
-			`{kind:'rect' x:8 y:8 w:344 h:100}`},
+			`{kind:'rect' x:8 y:8 w:344 h:100 mar:{l:3 t:3 r:3 b:3}}`},
 		{`(vbox :w 360 :h 360 :sub.h 36 (rect)(rect :h 72)(rect))`, "" +
 			`{kind:'rect' w:360 h:36}` +
 			`{kind:'rect' y:36 w:360 h:72}` +
@@ -78,18 +78,18 @@ func TestLayla(t *testing.T) {
 			`(text 'a:') (text '1')` +
 			`(text 'b:') (text '2'))` +
 			`(text :h 30 'end'))`, "" +
-			`{kind:'text' w:60 h:41 data:'a:'}` +
-			`{kind:'text' x:100 w:48 h:41 data:'1'}` +
-			`{kind:'text' y:41 w:60 h:41 data:'b:'}` +
-			`{kind:'text' x:100 y:41 w:48 h:41 data:'2'}` +
-			`{kind:'text' y:82 w:88 h:30 data:'end'}`},
+			`{kind:'text' w:100 h:41 data:'a:'}` +
+			`{kind:'text' x:100 w:200 h:41 data:'1'}` +
+			`{kind:'text' y:41 w:100 h:41 data:'b:'}` +
+			`{kind:'text' x:100 y:41 w:200 h:41 data:'2'}` +
+			`{kind:'text' y:82 w:300 h:30 data:'end'}`},
 		{`(vbox :w 300 :h 300 :list (list (text 'Hello') (text 'World')))`, "" +
-			`{kind:'text' w:111 h:41 data:'Hello'}` +
-			`{kind:'text' y:41 w:119 h:41 data:'World'}`},
+			`{kind:'text' w:300 h:41 data:'Hello'}` +
+			`{kind:'text' y:41 w:300 h:41 data:'World'}`},
 		{`(page :w 200 :h 41 (vbox (text 'Page1') (text 'Page2') (text 'Page3')))`, "" +
-			`{kind:'text' w:127 h:41 data:'Page1'}` +
-			`{kind:'page'}{kind:'text' w:127 h:41 data:'Page2'}` +
-			`{kind:'page'}{kind:'text' w:127 h:41 data:'Page3'}`},
+			`{kind:'text' w:200 h:41 data:'Page1'}` +
+			`{kind:'page'}{kind:'text' w:200 h:41 data:'Page2'}` +
+			`{kind:'page'}{kind:'text' w:200 h:41 data:'Page3'}`},
 		{`(page :w 200 :h 41 (text 'Page1\nPage2\nPage3'))`, "" +
 			`{kind:'text' w:127 h:41 data:'Page1'}` +
 			`{kind:'page'}{kind:'text' w:127 h:41 data:'Page2'}` +

@@ -19,13 +19,13 @@ import (
 var raw = `
 (stage :w 464 :h 480 :gap 32 :font.size 8 :pad [32 32 0 0]
 	(vbox :w 300 :sub.h 72
-		(group (text 'Produkt:')
+		(box (text 'Produkt:')
 			(text :y 24 :font.size 10 $title))
-		(group (text 'Anbieter:')
+		(box (text 'Anbieter:')
 			(text :y 24 :font.size 10 $vendor))
-		(group (text 'Batch:')
+		(box (text 'Batch:')
 			(text :y 24 :font.size 10 $batch))
-		(group (text 'Datum:')
+		(box (text 'Datum:')
 			(text :y 24 :font.size 10 (time:date_long $now)))
 	)
 	(qrcode :x 300 :y 166 :code ['H' 0 4]

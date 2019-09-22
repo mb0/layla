@@ -13,23 +13,34 @@ type xpage struct {
 	total string
 }
 
+func collectCopy(n *Node) *Node {
+	d := &Node{Kind: n.Kind, Box: n.Calc, Border: n.Border, NodeLayout: n.NodeLayout}
+	switch n.Kind {
+	case "text":
+		d.Font = n.Font
+		d.Data = n.Data
+	case "qrcode", "barcode":
+		d.Code = n.Code
+		d.Data = n.Data
+	}
+	return d
+}
+
 func (x *xpage) collect(n *Node, res []*Node, offy float64) []*Node {
 	var d *Node
 	switch n.Kind {
-	case "text", "block":
-		d = &Node{Kind: n.Kind, Box: n.Calc, Font: n.Font, Data: n.Data}
+	case "text":
+		d = collectCopy(n)
 		d.Data = strings.ReplaceAll(d.Data, "µP", x.page)
 		d.Data = strings.ReplaceAll(d.Data, "µT", x.total)
-	case "line":
-		d = &Node{Kind: n.Kind, Box: n.Calc, Stroke: n.Stroke}
-	case "qrcode", "barcode":
-		d = &Node{Kind: n.Kind, Box: n.Calc, Code: n.Code, Data: n.Data}
+	case "line", "qrcode", "barcode":
+		d = collectCopy(n)
 	case "rect", "ellipse":
-		d = &Node{Kind: n.Kind, Box: n.Calc, Stroke: n.Stroke}
+		d = collectCopy(n)
 		d.Y += offy
 		res = append(res, d)
 		fallthrough
-	case "stage", "group", "vbox", "hbox", "table", "page",
+	case "stage", "box", "vbox", "hbox", "table", "page",
 		"extra", "cover", "header", "footer":
 		for _, e := range n.List {
 			res = x.collect(e, res, offy)
@@ -46,6 +57,7 @@ type pager struct {
 	Cover  *Node
 	Header *Node
 	Footer *Node
+	THead  []*Node
 	list   []*xpage
 }
 
@@ -82,8 +94,59 @@ func (p *pager) newPage(org float64) *xpage {
 		b.H -= p.Footer.Calc.H
 	}
 	x := &xpage{Org: org, Box: b}
+	var mh float64
+	for _, th := range p.THead {
+		if th.Calc.H > mh {
+			mh = th.Calc.H
+		}
+		x.res = x.collect(th, x.res, x.Y-th.Calc.Y)
+	}
+	if mh > 0 {
+		x.Y += mh
+		x.H -= mh
+	}
 	p.list = append(p.list, x)
 	return x
+}
+
+func (p *pager) collect(n *Node) error {
+	switch n.Kind {
+	case "text", "line", "qrcode", "barcode":
+		p.draw(collectCopy(n), n.Mar)
+	case "rect", "ellipse":
+		p.draw(collectCopy(n), n.Mar)
+		return p.collectAll(n.List)
+	case "table":
+		hh := n.Head && len(p.THead) == 0
+		if hh {
+			head := n.List
+			if len(head) > len(n.Cols) {
+				head = head[:len(n.Cols)]
+			}
+			p.THead = head
+
+		}
+		err := p.collectAll(n.List)
+		if hh {
+			p.THead = nil
+		}
+		return err
+	case "stage", "box", "vbox", "hbox", "page":
+		return p.collectAll(n.List)
+	case "extra", "cover", "header", "footer":
+	}
+	return nil
+}
+
+func (p *pager) collectAll(ns []*Node) (err error) {
+	for _, e := range ns {
+		err := p.collect(e)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+
 }
 
 func (p *pager) draw(n *Node, m *Off) {
@@ -106,7 +169,7 @@ func (p *pager) draw(n *Node, m *Off) {
 			return
 		}
 		switch n.Kind {
-		case "text", "block":
+		case "text":
 			txt := strings.Split(n.Data, "\n")
 			lh := n.H / float64(len(txt))
 			ah := x.H - y
