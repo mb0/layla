@@ -126,7 +126,7 @@ type Node struct {
 	Border Border  `json:"border,omitempty"`
 	List   []*Node `json:"list,omitempty"`
 	Table
-	Code  *Code  `json:"code,omitempty"`
-	Data  string `json:"data,omitempty"`
-	Calc  Box    `json:"-"`
+	Code *Code  `json:"code,omitempty"`
+	Data string `json:"data,omitempty"`
+	Calc Box    `json:"-"`
 }

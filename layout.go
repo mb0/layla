@@ -217,8 +217,7 @@ func (l *layouter) hboxLayout(n *Node, stack []*Node) error {
 	}
 	return nil
 }
-func (l *layouter) tableLayout(n *Node, stack []*Node) error {
-	stack = append(stack, n)
+func tableCols(n *Node) {
 	aw := n.Calc.W
 	nw := 0.0
 	for _, c := range n.Cols {
@@ -239,40 +238,41 @@ func (l *layouter) tableLayout(n *Node, stack []*Node) error {
 	if aw > 0 {
 		n.Calc.W -= aw
 	}
+}
+
+func (l *layouter) tableLayout(n *Node, stack []*Node) error {
+	stack = append(stack, n)
+	tableCols(n)
 	a := n.Calc
-	var h, rh float64
-	for i, e := range n.List {
-		a.X = n.Calc.X
-		ci := i % len(n.Cols)
-		if ci == 0 && i > 0 {
-			if i < len(n.List)-1 {
-				rh += n.Gap
+	for i := 0; i < len(n.List); i += len(n.Cols) {
+		r := n.List[i:]
+		if len(n.Cols) < len(r) {
+			r = r[:len(n.Cols)]
+		}
+		var rw, rh float64
+		for i, c := range r {
+			b := a
+			b.X += rw
+			b.W = n.Cols[i]
+			rw += b.W
+			eb, err := l.layout(c, b, stack)
+			if err != nil {
+				return err
 			}
-			a.Y += rh
-			a.H -= rh
-			h += rh
-			rh = 0
-		} else {
-			for _, c := range n.Cols[:ci] {
-				a.X += c
+			c.Calc.W = b.W
+			if eb.H > rh {
+				rh = c.Calc.H
 			}
 		}
-		a.W = n.Cols[ci]
-		eb, err := l.layout(e, a, stack)
-		e.Calc.W = a.W
-		if e.Mar != nil {
-			e.Calc.W -= e.Mar.L + e.Mar.R
+		for _, c := range r {
+			c.Calc.H = rh
 		}
-		if err != nil {
-			return err
-		}
-		if eb.H > rh {
-			rh = eb.H
-		}
+		rh += n.Gap
+		a.Y += rh
+		a.H -= rh
 	}
-	h += rh
 	if n.Calc.H <= 0 {
-		n.Calc.H = clamp(n.Calc.H, h)
+		n.Calc.H = clamp(n.Calc.H, a.Y-n.Calc.Y)
 	}
 	return nil
 }
