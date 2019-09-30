@@ -5,7 +5,8 @@ import (
 	"bytes"
 	"fmt"
 	"image"
-	"image/gif"
+	"image/color"
+	"image/png"
 	"path/filepath"
 
 	"github.com/boombuler/barcode"
@@ -31,6 +32,10 @@ func Render(m *font.Manager, n *layla.Node) (*Doc, error) {
 	return Renderer{m, nil}.RenderTo(NewDoc(n), n)
 }
 
+type colorhack struct{ image.Image }
+
+func (colorhack) ColorModel() color.Model { return color.GrayModel }
+
 func DefaultBarcoder(n *layla.Node) (image.Image, error) {
 	bc, err := bcode.Barcode(n)
 	if err != nil {
@@ -40,7 +45,7 @@ func DefaultBarcoder(n *layla.Node) (image.Image, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%v %g %g", err, n.W, n.H)
 	}
-	return bc, nil
+	return colorhack{bc}, nil
 }
 
 type Renderer struct {
@@ -169,13 +174,13 @@ func (r Renderer) renderNode(d *Doc, n *layla.Node) error {
 			return err
 		}
 		var b bytes.Buffer
-		err = gif.Encode(&b, bc, nil)
+		err = png.Encode(&b, bc)
 		if err != nil {
 			return err
 		}
 		name := n.Kind + ":" + n.Data
-		iopt := gofpdf.ImageOptions{ImageType: "GIF"}
-		d.RegisterImageOptionsReader(name, iopt, bytes.NewReader(b.Bytes()))
+		iopt := gofpdf.ImageOptions{ImageType: "PNG"}
+		d.RegisterImageOptionsReader(name, iopt, &b)
 		d.ImageOptions(name, n.X/8, n.Y/8, n.W/8, n.H/8, false, iopt, 0, "")
 	case "page":
 		d.AddPage()
