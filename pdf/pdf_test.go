@@ -34,6 +34,7 @@ func TestPdf(t *testing.T) {
 		path string
 	}{
 		{"letter1.layla"},
+		{"measure1.layla"},
 	}
 	for _, test := range tests {
 		runTest(t, test.path)

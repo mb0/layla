@@ -159,10 +159,12 @@ func (r Renderer) renderNode(d *Doc, n *layla.Node) error {
 		if err != nil {
 			return err
 		}
-		d.SetXY(b.X/8, b.Y/8)
+		d.SetXY((b.X-8)/8, b.Y/8)
 		_, lh := d.GetFontSize()
 		if n.Font.Line > 0 {
 			lh *= n.Font.Line
+		} else {
+			lh *= 1.2
 		}
 		align := "LB"
 		switch n.Align {
@@ -171,7 +173,7 @@ func (r Renderer) renderNode(d *Doc, n *layla.Node) error {
 		case layla.AlignCenter:
 			align = "CB"
 		}
-		d.MultiCell(b.W/8, lh, res, "", align, false)
+		d.MultiCell((b.W+16)/8, lh, res, "", align, false)
 	case "barcode", "qrcode":
 		coder := r.Barcoder
 		if coder == nil {

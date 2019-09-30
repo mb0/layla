@@ -154,8 +154,7 @@ func Layout(f font.Face, text string, width int) ([]string, int, int, error) {
 		res = append(res, text[li:le])
 	}
 	lh := f.Metrics().Height.Ceil()
-	add, _ := f.GlyphAdvance('m')
-	return res, lh, (mlw + add).Ceil(), nil
+	return res, lh, mlw.Ceil(), nil
 }
 
 func tokWidth(f font.Face, text string, last rune) (res fixed.Int26_6, _ rune) {
