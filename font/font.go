@@ -90,6 +90,8 @@ func Layout(f font.Face, text string, width int) ([]string, int, int, error) {
 					mlw = lw
 				}
 				res = append(res, text[li:le])
+			} else {
+				res = append(res, "")
 			}
 			li = -1
 			sw, lw = 0, 0
