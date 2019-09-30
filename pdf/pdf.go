@@ -27,6 +27,7 @@ func NewDoc(n *layla.Node) *Doc {
 		Size:    gofpdf.SizeType{n.W / 8, n.H / 8},
 	})
 }
+func NewA4() *Doc { return gofpdf.New("P", "mm", "A4", "") }
 
 func Render(m *font.Manager, n *layla.Node) (*Doc, error) {
 	return Renderer{m, nil}.RenderTo(NewDoc(n), n)
@@ -54,7 +55,14 @@ type Renderer struct {
 }
 
 func (r Renderer) RenderTo(d *Doc, n *layla.Node) (*Doc, error) {
+	return r.RenderSubjTo(d, n, "")
+}
+
+func (r Renderer) RenderSubjTo(d *Doc, n *layla.Node, subj string) (*Doc, error) {
 	d.AddPage()
+	if subj != "" {
+		d.Bookmark(subj, 0, 0)
+	}
 	draw, err := layla.Layout(r.Manager, n)
 	if err != nil {
 		return nil, err
