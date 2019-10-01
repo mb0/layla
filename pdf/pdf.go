@@ -61,7 +61,10 @@ func (r Renderer) RenderTo(d *Doc, n *layla.Node) (*Doc, error) {
 func (r Renderer) RenderSubjTo(d *Doc, n *layla.Node, subj string) (*Doc, error) {
 	d.AddPage()
 	if subj != "" {
-		d.Bookmark(subj, 0, 0)
+		subj, err := enc(subj)
+		if err == nil {
+			d.Bookmark(subj, 0, 0)
+		}
 	}
 	draw, err := layla.Layout(r.Manager, n)
 	if err != nil {
