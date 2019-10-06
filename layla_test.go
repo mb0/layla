@@ -43,7 +43,7 @@ var testLabel2 = `(stage :w 464 :h 480 :gap 32 :font.size 8 :pad [32 40 32 40]
 
 func TestLayla(t *testing.T) {
 	man := &font.Manager{}
-	err := man.RegisterTTF("", "testdata/Go-Regular.ttf")
+	err := man.RegisterTTF("", "testdata/font/Go-Regular.ttf")
 	if err != nil {
 		t.Fatalf("register font error: %v", err)
 	}
@@ -128,7 +128,7 @@ func TestLayla(t *testing.T) {
 
 func TestMeasure(t *testing.T) {
 	man := &font.Manager{}
-	err := man.RegisterTTF("", "testdata/Go-Regular.ttf")
+	err := man.RegisterTTF("", "testdata/font/Go-Regular.ttf")
 	if err != nil {
 		t.Fatalf("register font error: %v", err)
 	}

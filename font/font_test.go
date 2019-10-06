@@ -9,7 +9,7 @@ import (
 
 func TestLayout(t *testing.T) {
 	m := &Manager{}
-	err := m.RegisterTTF("go", "../testdata/Go-Regular.ttf")
+	err := m.RegisterTTF("go", "../testdata/font/Go-Regular.ttf")
 	if err != nil {
 		t.Fatalf("parse font %v", err)
 	}
