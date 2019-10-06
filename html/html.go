@@ -8,6 +8,8 @@ import (
 	"image"
 	"image/gif"
 	"log"
+	"math"
+	"strings"
 
 	"github.com/boombuler/barcode"
 	"github.com/mb0/layla"
@@ -22,37 +24,93 @@ func RenderBfr(b bfr.B, man *font.Manager, n *layla.Node) error {
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(b, `<div class="layla" style="position:relative;background-color:white;width:%fmm;height:%fmm">`, n.W/8, n.H/8)
-	b.WriteString(`<style>.layla div { position: absolute; box-sizing: border-box; font-size: 8pt }</style>`)
-	for _, d := range draw {
+	b.WriteString(`<style>
+@font-face {
+	font-family: 'regular';
+	src: url('Go-Regular.ttf') format('truetype');
+}
+.layla {
+	position: relative;
+	background-color: white;
+	margin: 10mm;
+}
+.layla div {
+	position: absolute;
+	box-sizing: border-box;
+}</style>
+`)
+	for i, d := range draw {
+		if i == 0 || d.Kind == "page" {
+			if i > 0 {
+				b.WriteString("</div>\n")
+			}
+			fmt.Fprintf(b, `<div class="layla" style="width:%gmm;height:%gmm">`+"\n", n.W/8, n.H/8)
+			if d.Kind == "page" {
+				continue
+			}
+		}
 		b.WriteString(`<div style="`)
-		fmt.Fprintf(b, "left:%fmm;", d.X/8)
-		fmt.Fprintf(b, "top:%fmm;", d.Y/8)
-		fmt.Fprintf(b, "width:%fmm;", d.W/8)
-		fmt.Fprintf(b, "height:%fmm;", d.H/8)
+		fmt.Fprintf(b, "left:%gmm;", d.X/8)
+		fmt.Fprintf(b, "top:%gmm;", d.Y/8)
 		switch d.Kind {
 		case "ellipse":
-			fmt.Fprintf(b, "border:%fmm solid black;", d.Border.W/8)
+			writeDim(b, d.Dim)
+			fmt.Fprintf(b, "border:%gmm solid black;", d.Border.W/8)
 			x, y := d.W/16+d.Border.W, d.H/16+float64(d.Border.W/8)
-			fmt.Fprintf(b, "border-radius:%fmm / %fmm;", x, y)
+			fmt.Fprintf(b, "border-radius:%gmm / %gmm;", x, y)
+			b.WriteString(`">`)
+		case "line":
+			if d.W == 0 {
+				writeDim(b, d.Dim)
+				fmt.Fprintf(b, "border-left:%gmm solid black;", d.Border.W/8)
+			} else if d.H == 0 {
+				writeDim(b, d.Dim)
+				fmt.Fprintf(b, "border-top:%gmm solid black;", d.Border.W/8)
+			} else {
+				hyp := math.Sqrt(d.W*d.W + d.H*d.H)
+				deg := math.Asin(d.H/hyp) * 180 / math.Pi
+				writeDim(b, layla.Dim{math.Ceil(hyp), 0})
+				fmt.Fprintf(b, "border-top:%gmm solid black;", d.Border.W/8)
+				fmt.Fprintf(b, "transform:rotate(%gdeg);", math.Round(deg*10)/10)
+				b.WriteString(`transform-origin:top left;`)
+			}
 			b.WriteString(`">`)
 		case "rect":
-			fmt.Fprintf(b, "border:%fmm solid black;", d.Border.W/8)
+			writeDim(b, d.Dim)
+			fmt.Fprintf(b, "border:%gmm solid black;", d.Border.W/8)
 			b.WriteString(`">`)
 		case "text":
+			writeDim(b, d.Dim)
+			fmt.Fprintf(b, "font-family: %s;", d.Font.Name)
+			fmt.Fprintf(b, "font-size: %gpt;", d.Font.Size)
+			fmt.Fprintf(b, "line-height: %gmm;", d.Font.Line/8)
+			if d.Border.W > 0 {
+				fmt.Fprintf(b, "border:%gmm solid black;", d.Border.W/8)
+			}
+			switch d.Align {
+			case 1:
+				fmt.Fprintf(b, "text-align: right;")
+			case 2:
+				fmt.Fprintf(b, "text-align: center;")
+			}
 			b.WriteString(`">`)
-			b.WriteString(d.Data)
+			b.WriteString(strings.ReplaceAll(d.Data, "\n", "<br>\n"))
 		case "barcode", "qrcode":
+			writeDim(b, d.Dim)
 			b.WriteString(`">`)
 			err = writeBarcode(b, d)
 			if err != nil {
 				return err
 			}
 		}
-		b.WriteString(`</div>`)
+		b.WriteString("</div>\n")
 	}
 	b.WriteString(`</div>`)
 	return nil
+}
+func writeDim(b bfr.B, d layla.Dim) {
+	fmt.Fprintf(b, "width:%gmm;", d.W/8)
+	fmt.Fprintf(b, "height:%gmm;", d.H/8)
 }
 
 func writeBarcode(b bfr.B, d *layla.Node) error {
@@ -62,10 +120,10 @@ func writeBarcode(b bfr.B, d *layla.Node) error {
 	}
 	img, err = barcode.Scale(img, int(d.W), int(d.H))
 	if err != nil {
-		log.Printf("scale barcode %f %f", d.W, d.H)
+		log.Printf("scale barcode %g %g", d.W, d.H)
 		return err
 	}
-	fmt.Fprintf(b, `<img style="width:%fmm; height:%fmm" src="`, d.W/8, d.H/8)
+	fmt.Fprintf(b, `<img style="width:%gmm; height:%gmm" src="`, d.W/8, d.H/8)
 	err = writeDataURL(b, img)
 	if err != nil {
 		return err

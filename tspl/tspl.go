@@ -21,8 +21,8 @@ func RenderBfr(b bfr.B, man *font.Manager, n *layla.Node, extra ...string) error
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(b, "SIZE %f mm, %f mm\n", n.W, n.H)
-	fmt.Fprintf(b, "GAP %f mm, 0 mm\n", n.Gap)
+	fmt.Fprintf(b, "SIZE %g mm, %g mm\n", n.W/8, n.H/8)
+	fmt.Fprintf(b, "GAP %g mm, 0 mm\n", n.Gap/8)
 	b.WriteString("DIRECTION 1,0\nCODEPAGE UTF-8\n")
 	for _, line := range extra {
 		b.WriteString(line)
@@ -41,11 +41,15 @@ func RenderBfr(b bfr.B, man *font.Manager, n *layla.Node, extra ...string) error
 			fmt.Fprintf(b, "BOX %d,%d,%d,%d,%d\n",
 				dot(d.X), dot(d.Y), dot(d.X+d.W), dot(d.Y+d.H),
 				dot(d.Border.W))
+		case "line":
+			fmt.Fprintf(b, "LINE %d,%d,%d,%d,%d\n",
+				dot(d.X), dot(d.Y), dot(d.X+d.W), dot(d.Y+d.H),
+				dot(d.Border.W))
 		case "text":
 			fsize := fontSize(d)
 			fmt.Fprintf(b, "BLOCK %d,%d,%d,%d,\"0\",0,%d,%d,%d,%d,%q\n",
 				dot(d.X), dot(d.Y), dot(d.W), dot(d.H),
-				fsize, fsize, dot(d.Sub.H), d.Align, d.Data)
+				fsize, fsize, dot(d.Font.Line), d.Align, d.Data)
 		case "barcode":
 			fmt.Fprintf(b, "BARCODE %d,%d,%s,%d,%d,0,%d,%d,%q\n",
 				dot(d.X), dot(d.Y), strings.ToUpper(d.Code.Name), dot(d.H),
@@ -54,6 +58,8 @@ func RenderBfr(b bfr.B, man *font.Manager, n *layla.Node, extra ...string) error
 			fmt.Fprintf(b, "BARCODE %d,%d,%s,%d,A,0,M2,S7,%q\n",
 				dot(d.X), dot(d.Y), strings.ToUpper(d.Code.Name),
 				dot(d.Code.Wide), d.Data)
+		case "page":
+			return fmt.Errorf("paging not supported")
 		}
 	}
 	return nil
