@@ -75,6 +75,7 @@ func (l *layouter) layout(n *Node, a Box, stack []*Node) (_ Box, err error) {
 	case "text":
 		err = l.textLayout(n, stack)
 	case "line":
+		n.Calc.W = n.W
 	case "qrcode":
 		if nb.H == 0 || nb.W < nb.H {
 			n.Calc.H = nb.W
@@ -123,9 +124,10 @@ func (l *layouter) textLayout(n *Node, stack []*Node) error {
 	}
 	lh := lf
 	if lh < 8 {
-		lh = lf * float64(h) * 25.4 * 8 / 72
+		lh = math.Ceil(lf * float64(h) * 25.4 * 8 / 72)
+		of.Line = lh
 	}
-	b.H = math.Ceil(lh) * float64(len(txt))
+	b.H = lh * float64(len(txt))
 	b.W = math.Ceil(float64(mw) * 25.4 * 8 / 72)
 	b = n.Pad.Outset(b)
 	n.Calc.H = clamp(n.Calc.H, b.H)
