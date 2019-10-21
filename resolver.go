@@ -58,7 +58,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	nodeSig := []typ.Param{{Name: "tags?"}, {Name: "rest?"}, {Type: t}}
+	nodeSig := []typ.Param{{Name: "tags?"}, {Name: "tail?"}, {Type: t}}
 	listNodes := []string{"stage", "rect", "ellipse", "box", "vbox", "hbox", "table",
 		"page", "extra", "cover", "header", "footer"}
 	dataNodes := []string{"line", "text", "qrcode", "barcode"}
