@@ -163,11 +163,17 @@ func (l *layouter) vboxLayout(n *Node, stack []*Node) error {
 	a := n.Pad.Inset(n.Calc)
 	var h float64
 	for i, e := range n.List {
-		ab := a
 		if n.Sub.H > 0 && e.H <= 0 {
 			e.H = n.Sub.H
 		}
-		eb, err := l.layout(e, ab, stack)
+		max := a.W
+		if e.Mar != nil {
+			max -= e.Mar.L + e.Mar.R
+		}
+		if e.W > max {
+			e.W = max
+		}
+		eb, err := l.layout(e, a, stack)
 		if err != nil {
 			return err
 		}
@@ -178,17 +184,13 @@ func (l *layouter) vboxLayout(n *Node, stack []*Node) error {
 		a.Y += y
 		a.H -= y
 		h += y
-		e.Calc.W = a.W
-		if e.Mar != nil {
-			e.Calc.W -= e.Mar.L + e.Mar.R
+		if e.W > 0 {
+			e.Calc.W = e.W
+		} else {
+			e.Calc.W = max
 		}
 	}
-	if n.Calc.W <= 0 {
-		n.Calc.W = clamp(n.Calc.W, a.W)
-	}
-	if n.Calc.H <= 0 {
-		n.Calc.H = clamp(n.Calc.H, h)
-	}
+	n.Calc.H = clamp(n.Calc.H, h)
 	return nil
 }
 func (l *layouter) hboxLayout(n *Node, stack []*Node) error {
@@ -196,6 +198,16 @@ func (l *layouter) hboxLayout(n *Node, stack []*Node) error {
 	a := n.Pad.Inset(n.Calc)
 	var w, h float64
 	for i, e := range n.List {
+		if n.Sub.W > 0 && e.W <= 0 {
+			e.W = n.Sub.W
+		}
+		max := a.H
+		if e.Mar != nil {
+			max -= e.Mar.T + e.Mar.B
+		}
+		if e.H > max {
+			e.H = max
+		}
 		eb, err := l.layout(e, a, stack)
 		if err != nil {
 			return err
@@ -211,12 +223,7 @@ func (l *layouter) hboxLayout(n *Node, stack []*Node) error {
 			h = eb.H
 		}
 	}
-	if n.Calc.W <= 0 {
-		n.Calc.W = clamp(n.Calc.W, w)
-	}
-	if n.Calc.H <= 0 {
-		n.Calc.H = clamp(n.Calc.H, h)
-	}
+	n.Calc.W = clamp(n.Calc.W, w)
 	return nil
 }
 func tableCols(n *Node) {
