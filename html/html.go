@@ -6,7 +6,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"image"
-	"image/gif"
+	"image/png"
 	"log"
 	"math"
 	"strings"
@@ -132,9 +132,9 @@ func writeBarcode(b bfr.B, d *layla.Node) error {
 
 // writeDataURL writes the given img as monochrome gif data url to b
 func writeDataURL(b bfr.B, img image.Image) error {
-	b.WriteString("data:image/gif;base64,")
+	b.WriteString("data:image/png;base64,")
 	enc := base64.NewEncoder(base64.RawStdEncoding, b)
-	err := gif.Encode(enc, img, nil)
+	err := png.Encode(enc, img)
 	if err != nil {
 		return err
 	}
