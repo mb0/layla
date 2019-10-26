@@ -27,7 +27,7 @@ func RenderBfr(b bfr.B, man *font.Manager, n *layla.Node) error {
 	b.WriteString(`<style>
 @font-face {
 	font-family: 'regular';
-	src: url('Go-Regular.ttf') format('truetype');
+	src: url('font/Go-Regular.ttf') format('truetype');
 }
 .layla {
 	position: relative;
