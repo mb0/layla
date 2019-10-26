@@ -14,11 +14,13 @@ type xpage struct {
 }
 
 func collectCopy(n *Node) *Node {
-	d := &Node{Kind: n.Kind, Box: n.Calc, Border: n.Border, NodeLayout: n.NodeLayout}
+	d := &Node{Kind: n.Kind, Box: n.Calc, Border: n.Border}
 	switch n.Kind {
 	case "text":
 		d.Font = n.Font
 		d.Data = n.Data
+		d.Align = n.Align
+		d.Mar = n.Mar
 	case "qrcode", "barcode":
 		d.Code = n.Code
 		d.Data = n.Data
