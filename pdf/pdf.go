@@ -22,12 +22,18 @@ import (
 type Doc = gofpdf.Fpdf
 
 func NewDoc(n *layla.Node) *Doc {
-	return gofpdf.NewCustom(&gofpdf.InitType{
+	doc := gofpdf.NewCustom(&gofpdf.InitType{
 		UnitStr: "mm",
 		Size:    gofpdf.SizeType{n.W / 8, n.H / 8},
 	})
+	doc.SetAutoPageBreak(false, 0)
+	return doc
 }
-func NewA4() *Doc { return gofpdf.New("P", "mm", "A4", "") }
+func NewA4() *Doc {
+	doc := gofpdf.New("P", "mm", "A4", "")
+	doc.SetAutoPageBreak(false, 0)
+	return doc
+}
 
 func Render(m *font.Manager, n *layla.Node) (*Doc, error) {
 	return Renderer{m, nil}.RenderTo(NewDoc(n), n)
