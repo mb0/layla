@@ -1,10 +1,9 @@
 package layla
 
 const (
-	_           = iota
-	AlignLeft   = 1
-	AlignRight  = 2
-	AlignCenter = 3
+	AlignLeft = iota
+	AlignRight
+	AlignCenter
 )
 
 // Pos is a simple position consisting of x and y coordinates in mm.
