@@ -4,42 +4,10 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/mb0/layla/font"
-	"github.com/mb0/xelf/exp"
-	"github.com/mb0/xelf/lit"
 	"github.com/mb0/xelf/prx"
 )
-
-var testLabel1 = `(stage :w 360 :h 360 :align 2 :gap 30 :font.size 7 :pad [30 40 30 0]
-	(text :font.size 12 $title)
-	(text :mar [6 0 6 0] :y 70 :h 76 "Zutaten: " $ingreds)
-	(vbox :y 146 :sub.h 20
-		(text 'Verpackt am: ' (time:date_long $now))
-		(text 'ungeöffnet haltbar bis: ' (time:date_long (time:add_days $now $bbdays)))
-		(text 'Hergestellt für: ' $vendor)
-		(text 'Straße Nr, PLZ Ort')
-	)
-	(ellipse :y 246 :w 100 :h 66 :border [2]
-		(vbox :y 9 :sub.h 18 :font.size 6
-			(text "DE")
-			(text $stamp)
-			(text "EG")
-		)
-	)
-)`
-
-var testLabel2 = `(stage :w 464 :h 480 :gap 32 :font.size 8 :pad [32 40 32 40]
-(table :w 300 :sub.h 40 :cols [100,200]
-	(text 'Produkt:')  (text $title)
-	(text 'Anbieter:') (text $vendor)
-	(text 'Quelle:')   (text $batch)
-	(text 'Datum:')    (text (time:date_long $now))
-)
-(qrcode :x 268 :y 120 :code.name 'h' :code.wide 4 (str:upper ('A' 'http://vendor.url/' $batch)))
-(barcode :x 8 :y 320 :h 124 :code.name 'ean128' :code.human 2 :code.wide 2 '10' $batch)
-)`
 
 func TestLayla(t *testing.T) {
 	man := &font.Manager{}
@@ -47,21 +15,10 @@ func TestLayla(t *testing.T) {
 	if err != nil {
 		t.Fatalf("register font error: %v", err)
 	}
-	prog := &exp.ParamEnv{exp.NewScope(Env), lit.RecFromKeyed([]lit.Keyed{
-		{"now", lit.Time(time.Now())},
-		{"title", lit.Str("Produkt")},
-		{"vendor", lit.Str("Firma GmbH")},
-		{"batch", lit.Str("AB19020501")},
-		{"ingreds", lit.Str("Zutaten: Zucker, Essig, Salz, Gewürze")},
-		{"bbdays", lit.Int(99)},
-		{"stamp", lit.Str("XY 12345")},
-	})}
 	tests := []struct {
 		raw  string
 		want string
 	}{
-		{testLabel1, ""},
-		{testLabel2, ""},
 		{`(stage :w 360 :h 360 (rect))`, `{kind:'rect' w:360 h:360}`},
 		{`(rect :w 360 :h 360 (text 'Hello'))`, `{kind:'rect' w:360 h:360}` +
 			`{kind:'text' w:82 h:41 font:{line:41} data:'Hello'}`},
@@ -69,11 +26,17 @@ func TestLayla(t *testing.T) {
 		{`(stage :w 360 :h 360 :pad [5 5 5 5] (rect :h 100))`,
 			`{kind:'rect' x:5 y:5 w:350 h:100}`},
 		{`(stage :w 360 :h 360 :pad [5 5 5 5] (rect :h 100 :mar [3 3 3 3]))`,
-			`{kind:'rect' x:8 y:8 w:344 h:100 mar:{l:3 t:3 r:3 b:3}}`},
+			`{kind:'rect' x:8 y:8 w:344 h:100}`},
 		{`(vbox :w 360 :h 360 :sub.h 36 (rect)(rect :h 72)(rect))`, "" +
 			`{kind:'rect' w:360 h:36}` +
 			`{kind:'rect' y:36 w:360 h:72}` +
 			`{kind:'rect' y:108 w:360 h:36}`},
+		{`(vbox :w 300 :h 200 (rect :w 200 :h 100))`, `{kind:'rect' w:200 h:100}`},
+		{`(vbox :w 300 :h 200 :align 1 (rect :w 200 :h 100))`,
+			`{kind:'rect' x:100 w:200 h:100}`},
+		{`(vbox :w 300 :h 200 :align 2 (rect :w 200 :h 100))`,
+			`{kind:'rect' x:50 w:200 h:100}`},
+		{`(hbox :w 300 :h 200 (rect :w 200 :h 100))`, `{kind:'rect' w:200 h:100}`},
 		{`(vbox :w 300 (table :sub.h 41 :cols [100,200]` +
 			`(text 'a:') (text '1')` +
 			`(text 'b:') (text '2'))` +
@@ -102,7 +65,7 @@ func TestLayla(t *testing.T) {
 			`{kind:'page'}{kind:'text' w:181 h:41 font:{line:41} data:'Hallo Welt'}`},
 	}
 	for _, test := range tests {
-		n, err := ExecuteString(prog, test.raw)
+		n, err := ExecuteString(Env, test.raw)
 		if err != nil {
 			t.Errorf("exec %s error: %+v", test.raw, err)
 			continue

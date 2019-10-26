@@ -69,6 +69,14 @@ func (l *layouter) layout(n *Node, a Box, stack []*Node) (_ Box, err error) {
 	ab := m.Inset(a)
 	nb := Box{Pos: ab.Pos, Dim: n.Dim}
 	nb.W = clampFill(ab.W, nb.W)
+	if nb.W < ab.W {
+		switch n.Align {
+		case AlignRight:
+			nb.X += math.Floor(ab.W - nb.W)
+		case AlignCenter:
+			nb.X += math.Ceil((ab.W - nb.W) / 2)
+		}
+	}
 	nb.H = clamp(ab.H, nb.H)
 	n.Calc = nb
 	switch n.Kind {

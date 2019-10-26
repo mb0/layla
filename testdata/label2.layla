@@ -1,17 +1,17 @@
 (stage :w 360 :h 360 :align 2 :gap 30 :font ['regular' 7] :pad [30 40 30 0]
-	(text :font.size 12 $title)
-	(text :mar [6 0 6 0] :y 70 :h 76 "Zutaten: " $ingreds)
-	(vbox :y 146 :sub.h 20 :align 2
+	(vbox :align 2
+		(text :font.size 12 $title)
+		(text :mar [12 0 0 6] :h 76 "Zutaten: " $ingreds)
 		(text 'Verpackt am: ' (time:date_long $now))
 		(text 'ungeöffnet haltbar: ' (time:date_long (time:add_days $now 90)))
 		(text 'Hergestellt für: ' $vendor)
 		(text 'Straße Nr, PLZ Ort')
-	)
-	(ellipse :y 246 :w 100 :h 66 :border [2]
-		(vbox :y 9 :sub.h 18 :font.size 6 :align 2
-			(text 'CO')
-			(text 'DEcodeCO')
-			(text 'DE')
+		(ellipse :w 100 :h 66 :border [2]
+			(vbox :y 9 :font.size 5 :align 2
+				(text 'CO')
+				(text 'DEcodeCO')
+				(text 'DE')
+			)
 		)
 	)
 )
