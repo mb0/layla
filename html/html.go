@@ -50,35 +50,36 @@ func RenderBfr(b bfr.B, man *font.Manager, n *layla.Node) error {
 			}
 		}
 		b.WriteString(`<div style="`)
-		fmt.Fprintf(b, "left:%gmm;", d.X/8)
-		fmt.Fprintf(b, "top:%gmm;", d.Y/8)
 		switch d.Kind {
 		case "ellipse":
-			writeDim(b, d.Dim)
+			writeBox(b, d.Box)
 			fmt.Fprintf(b, "border:%gmm solid black;", d.Border.W/8)
 			b.WriteString(`border-radius: 50%">`)
 		case "line":
 			if d.W == 0 {
-				writeDim(b, d.Dim)
+				writeBox(b, d.Box)
 				fmt.Fprintf(b, "border-left:%gmm solid black;", d.Border.W/8)
 			} else if d.H == 0 {
-				writeDim(b, d.Dim)
+				writeBox(b, d.Box)
 				fmt.Fprintf(b, "border-top:%gmm solid black;", d.Border.W/8)
 			} else {
 				hyp := math.Sqrt(d.W*d.W + d.H*d.H)
 				deg := math.Asin(d.H/hyp) * 180 / math.Pi
-				writeDim(b, layla.Dim{math.Ceil(hyp), 0})
+				writeBox(b, layla.Box{d.Pos, layla.Dim{math.Ceil(hyp), 0}})
 				fmt.Fprintf(b, "border-top:%gmm solid black;", d.Border.W/8)
 				fmt.Fprintf(b, "transform:rotate(%gdeg);", math.Round(deg*10)/10)
 				b.WriteString(`transform-origin:top left;`)
 			}
 			b.WriteString(`">`)
 		case "rect":
-			writeDim(b, d.Dim)
+			writeBox(b, d.Box)
 			fmt.Fprintf(b, "border:%gmm solid black;", d.Border.W/8)
 			b.WriteString(`">`)
 		case "text":
-			writeDim(b, d.Dim)
+			fmt.Fprintf(b, "left:%gmm;", (d.X-2)/8)
+			fmt.Fprintf(b, "top:%gmm;", d.Y/8)
+			fmt.Fprintf(b, "width:%gmm;", (d.W+4)/8)
+			fmt.Fprintf(b, "height:%gmm;", d.H/8)
 			fmt.Fprintf(b, "font-family: %s;", d.Font.Name)
 			fmt.Fprintf(b, "font-size: %gpt;", d.Font.Size)
 			fmt.Fprintf(b, "line-height: %gmm;", d.Font.Line/8)
@@ -94,7 +95,7 @@ func RenderBfr(b bfr.B, man *font.Manager, n *layla.Node) error {
 			b.WriteString(`">`)
 			b.WriteString(strings.ReplaceAll(d.Data, "\n", "<br>\n"))
 		case "barcode", "qrcode":
-			writeDim(b, d.Dim)
+			writeBox(b, d.Box)
 			b.WriteString(`">`)
 			err = writeBarcode(b, d)
 			if err != nil {
@@ -106,7 +107,9 @@ func RenderBfr(b bfr.B, man *font.Manager, n *layla.Node) error {
 	b.WriteString(`</div>`)
 	return nil
 }
-func writeDim(b bfr.B, d layla.Dim) {
+func writeBox(b bfr.B, d layla.Box) {
+	fmt.Fprintf(b, "left:%gmm;", d.X/8)
+	fmt.Fprintf(b, "top:%gmm;", d.Y/8)
 	fmt.Fprintf(b, "width:%gmm;", d.W/8)
 	fmt.Fprintf(b, "height:%gmm;", d.H/8)
 }
