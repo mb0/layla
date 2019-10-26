@@ -24,6 +24,7 @@ type Manager struct {
 	faces map[Key]font.Face
 }
 
+// TODO add font style for bold and italic fonts and use inline styling
 func (m *Manager) RegisterTTF(name string, path string) error {
 	_, ok := m.ttfs[name]
 	if ok {
@@ -77,12 +78,14 @@ func (m *Manager) Face(name string, size float64) (font.Face, error) {
 	return f, nil
 }
 
+// TODO make method of manager and pass in font family and size so we can select font styles inline
 func Layout(f font.Face, text string, width int) ([]string, int, int, error) {
 	mw := fixed.I(width)
 	var li, le int
 	var sw, lw, mlw fixed.Int26_6
 	last := rune('\n')
 	var res []string
+	// TODO tokenize using the mark packages inline parser
 	for _, t := range tokens(text) {
 		if t.len == 0 { // hard break
 			if li >= 0 {
