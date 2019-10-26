@@ -56,9 +56,7 @@ func RenderBfr(b bfr.B, man *font.Manager, n *layla.Node) error {
 		case "ellipse":
 			writeDim(b, d.Dim)
 			fmt.Fprintf(b, "border:%gmm solid black;", d.Border.W/8)
-			x, y := d.W/16+d.Border.W, d.H/16+float64(d.Border.W/8)
-			fmt.Fprintf(b, "border-radius:%gmm / %gmm;", x, y)
-			b.WriteString(`">`)
+			b.WriteString(`border-radius: 50%">`)
 		case "line":
 			if d.W == 0 {
 				writeDim(b, d.Dim)
