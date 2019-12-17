@@ -21,7 +21,11 @@ func RenderBfr(b bfr.B, man *font.Manager, n *layla.Node, extra ...string) error
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(b, "SIZE %g mm, %g mm\n", n.W/8, n.H/8)
+	w, h := n.W, n.H
+	if n.Rot == 90 {
+		w, h = h, w
+	}
+	fmt.Fprintf(b, "SIZE %g mm, %g mm\n", w/8, h/8)
 	fmt.Fprintf(b, "GAP %g mm, 0 mm\n", n.Gap/8)
 	b.WriteString("DIRECTION 1,0\nCODEPAGE UTF-8\n")
 	for _, line := range extra {
@@ -32,35 +36,52 @@ func RenderBfr(b bfr.B, man *font.Manager, n *layla.Node, extra ...string) error
 	}
 	b.WriteString("CLS\n")
 	for _, d := range draw {
-		switch d.Kind {
-		case "ellipse":
-			fmt.Fprintf(b, "ELLIPSE %d,%d,%d,%d,%d\n",
-				dot(d.X), dot(d.Y), dot(d.W), dot(d.H),
-				dot(d.Border.W))
-		case "rect":
-			fmt.Fprintf(b, "BOX %d,%d,%d,%d,%d\n",
-				dot(d.X), dot(d.Y), dot(d.X+d.W), dot(d.Y+d.H),
-				dot(d.Border.W))
-		case "line":
-			fmt.Fprintf(b, "LINE %d,%d,%d,%d,%d\n",
-				dot(d.X), dot(d.Y), dot(d.X+d.W), dot(d.Y+d.H),
-				dot(d.Border.W))
-		case "text":
-			fsize := fontSize(d)
-			fmt.Fprintf(b, "BLOCK %d,%d,%d,%d,\"0\",0,%d,%d,%d,%d,%q\n",
-				dot(d.X), dot(d.Y), dot(d.W), dot(d.H),
-				fsize, fsize, dot(d.Font.Line), d.Align, d.Data)
-		case "barcode":
-			fmt.Fprintf(b, "BARCODE %d,%d,%s,%d,%d,0,%d,%d,%q\n",
-				dot(d.X), dot(d.Y), strings.ToUpper(d.Code.Name), dot(d.H),
-				d.Code.Human, dot(d.Code.Wide), d.Align, d.Data)
-		case "qrcode":
-			fmt.Fprintf(b, "BARCODE %d,%d,%s,%d,A,0,M2,S7,%q\n",
-				dot(d.X), dot(d.Y), strings.ToUpper(d.Code.Name),
-				dot(d.Code.Wide), d.Data)
-		case "page":
-			return fmt.Errorf("paging not supported")
+		err = renderNode(b, d, n.Rot, n.H)
+		if err != nil {
+			return err
 		}
+	}
+	return nil
+}
+
+func renderNode(b bfr.B, d *layla.Node, rot int, rh float64) error {
+	if rot != 0 {
+		switch d.Kind {
+		case "rect", "line", "ellipse":
+			d.X, d.Y = rh-d.Y-d.H, d.X
+			d.W, d.H = d.H, d.W
+		case "text", "barcode", "qrcode":
+			d.X, d.Y = rh-d.Y, d.X
+		}
+	}
+	switch d.Kind {
+	case "ellipse":
+		fmt.Fprintf(b, "ELLIPSE %d,%d,%d,%d,%d\n",
+			dot(d.X), dot(d.Y), dot(d.W), dot(d.H),
+			dot(d.Border.W))
+	case "rect":
+		fmt.Fprintf(b, "BOX %d,%d,%d,%d,%d\n",
+			dot(d.X), dot(d.Y), dot(d.X+d.W), dot(d.Y+d.H),
+			dot(d.Border.W))
+	case "line":
+		fmt.Fprintf(b, "LINE %d,%d,%d,%d,%d\n",
+			dot(d.X), dot(d.Y), dot(d.X+d.W), dot(d.Y+d.H),
+			dot(d.Border.W))
+	case "text":
+		fsize := fontSize(d)
+		fmt.Fprintf(b, "BLOCK %d,%d,%d,%d,\"0\",%d,%d,%d,%d,%d,%q\n",
+			dot(d.X), dot(d.Y), dot(d.W), dot(d.H), rot,
+			fsize, fsize, dot(d.Font.Line), d.Align, d.Data)
+	case "barcode":
+		fmt.Fprintf(b, "BARCODE %d,%d,%s,%d,%d,%d,%d,%d,%q\n",
+			dot(d.X), dot(d.Y), strings.ToUpper(d.Code.Name), dot(d.H), rot,
+			d.Code.Human, dot(d.Code.Wide), d.Align, d.Data)
+	case "qrcode":
+		fmt.Fprintf(b, "QRCODE %d,%d,%s,%d,A,%d,M2,S7,%q\n",
+			dot(d.X), dot(d.Y), strings.ToUpper(d.Code.Name),
+			dot(d.Code.Wide), rot, d.Data)
+	default:
+		return fmt.Errorf("layout %s not supported", d.Kind)
 	}
 	return nil
 }

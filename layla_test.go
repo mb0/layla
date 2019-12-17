@@ -31,6 +31,9 @@ func TestLayla(t *testing.T) {
 			`{kind:'rect' w:360 h:36}` +
 			`{kind:'rect' y:36 w:360 h:72}` +
 			`{kind:'rect' y:108 w:360 h:36}`},
+		{`(vbox w:360 h:360 sub.h:36 (rect)(if false (rect h:72))(rect))`, "" +
+			`{kind:'rect' w:360 h:36}` +
+			`{kind:'rect' y:36 w:360 h:36}`},
 		{`(vbox w:300 h:200 (rect w:200 h:100))`, `{kind:'rect' w:200 h:100}`},
 		{`(vbox w:300 h:200 align:1 (rect w:200 h:100))`,
 			`{kind:'rect' x:100 w:200 h:100}`},
