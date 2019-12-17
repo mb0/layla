@@ -126,6 +126,7 @@ func (l *layouter) textLayout(n *Node, stack []*Node) error {
 	if err != nil {
 		return err
 	}
+	of.Height = float64(h)
 	lf := of.Line
 	if lf <= 0 {
 		lf = 1.2

@@ -62,9 +62,10 @@ func (o *Off) Outset(b Box) Box {
 
 // Font holds all font data related node data
 type Font struct {
-	Name string  `json:"name,omitempty"`
-	Size float64 `json:"size,omitempty"`
-	Line float64 `json:"line,omitempty"`
+	Name   string  `json:"name,omitempty"`
+	Size   float64 `json:"size,omitempty"`
+	Line   float64 `json:"line,omitempty"`
+	Height float64 `json:"-"`
 }
 
 // NodeLayout holds all layout related node data

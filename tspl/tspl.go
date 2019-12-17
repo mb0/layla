@@ -69,13 +69,15 @@ func renderNode(b bfr.B, d *layla.Node, rot int, rh float64) error {
 			dot(d.Border.W))
 	case "text":
 		fsize := fontSize(d)
-		fmt.Fprintf(b, "BLOCK %d,%d,%d,%d,\"0\",%d,%d,%d,%d,%d,%q\n",
-			dot(d.X), dot(d.Y), dot(d.W), dot(d.H), rot,
-			fsize, fsize, dot(d.Font.Line), d.Align, d.Data)
+		data := strings.Replace(fmt.Sprintf("%q", d.Data), "\\n", "\\[L]", -1)
+		space := d.Font.Line - (d.Font.Height * 25.4 * 8 / 72)
+		fmt.Fprintf(b, "BLOCK %d,%d,%d,%d,\"0\",%d,%d,%d,%d,%d,%s\n",
+			dot(d.X-2), dot(d.Y), dot(d.W+4), dot(d.H), rot,
+			fsize, fsize, dot(space), d.Align, data)
 	case "barcode":
-		fmt.Fprintf(b, "BARCODE %d,%d,%s,%d,%d,%d,%d,%d,%q\n",
-			dot(d.X), dot(d.Y), strings.ToUpper(d.Code.Name), dot(d.H), rot,
-			d.Code.Human, dot(d.Code.Wide), d.Align, d.Data)
+		fmt.Fprintf(b, "BARCODE %d,%d,%q,%d,%d,%d,%d,%d,%q\n",
+			dot(d.X), dot(d.Y), strings.ToUpper(d.Code.Name), dot(d.H),
+			dot(d.Code.Wide), rot, d.Code.Human, d.Align, d.Data)
 	case "qrcode":
 		fmt.Fprintf(b, "QRCODE %d,%d,%s,%d,A,%d,M2,S7,%q\n",
 			dot(d.X), dot(d.Y), strings.ToUpper(d.Code.Name),
