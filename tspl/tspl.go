@@ -71,6 +71,18 @@ func renderNode(b bfr.B, d *layla.Node, rot int, rh float64) error {
 		fsize := fontSize(d)
 		data := strings.Replace(fmt.Sprintf("%q", d.Data), "\\n", "\\[L]", -1)
 		space := d.Font.Line - (d.Font.Height * 25.4 * 8 / 72)
+		x, w := dot(d.X), dot(d.W)
+		// TODO fix overflow due to discrepancy between font measuring and printing
+		// the reason might be that the tsc printer does not apply kerning?
+		switch d.Align {
+		case 3:
+			x -= 10
+		case 2:
+			x -= 5
+			w += 5
+		default:
+			w += 10
+		}
 		fmt.Fprintf(b, "BLOCK %d,%d,%d,%d,\"0\",%d,%d,%d,%d,%d,%s\n",
 			dot(d.X-2), dot(d.Y), dot(d.W+4), dot(d.H), rot,
 			fsize, fsize, dot(space), d.Align, data)
