@@ -87,11 +87,11 @@ func renderNode(lay *layla.Layouter, b bfr.B, d *layla.Node, rot int, rh float64
 			w += 10
 		}
 		fmt.Fprintf(b, "BLOCK %d,%d,%d,%d,\"0\",%d,%d,%d,%d,%d,%s\n",
-			dot(d.X-2), dot(d.Y), dot(d.W+4), dot(d.H), rot,
+			x, dot(d.Y), w, dot(d.H), rot,
 			fsize, fsize, dot(space), d.Align, data)
 		if d.Font != nil && d.Font.Style&mark.B != 0 {
 			fmt.Fprintf(b, "BLOCK %d,%d,%d,%d,\"0\",%d,%d,%d,%d,%d,%s\n",
-				dot(d.X), dot(d.Y), dot(d.W+6), dot(d.H), rot,
+				x+1, dot(d.Y), w+1, dot(d.H), rot,
 				fsize, fsize, dot(space), d.Align, data)
 		}
 	case "barcode":

@@ -39,7 +39,13 @@ func (l *Layouter) lineLayout(n *Node, stack []*Node) (err error) {
 	var buf bytes.Buffer
 	var y, mw float64
 	for li, line := range res {
-		// TODO handle alignment
+		bx := b.X
+		switch n.Align {
+		case 2: // center
+			bx += math.Floor((b.W - line.W) / 2)
+		case 3: // right
+			bx += math.Floor(b.W - line.W)
+		}
 		if !markup && li > 0 {
 			buf.WriteByte('\n')
 		}
@@ -56,7 +62,7 @@ func (l *Layouter) lineLayout(n *Node, stack []*Node) (err error) {
 					Kind: "text",
 					Data: sp.Text,
 					Calc: Box{
-						Pos: Pos{X: b.X + math.Ceil(x), Y: b.Y + y},
+						Pos: Pos{X: bx + math.Ceil(x), Y: b.Y + y},
 						Dim: Dim{W: sp.W, H: lh},
 					},
 					Font: of,

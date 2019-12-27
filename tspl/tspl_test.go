@@ -27,17 +27,17 @@ func TestRenderNode(t *testing.T) {
 			rot:  "ELLIPSE 280,100,40,60,2\n",
 		},
 		{raw: "(stage w:5000 h:800 (text align:2 font.size:32 'Smokey Mayonnaise'))",
-			want: "BLOCK -2,0,847,108,\"0\",0,32,32,18,2,\"Smokey Mayonnaise\"\n",
+			want: "BLOCK -5,0,848,108,\"0\",0,32,32,18,2,\"Smokey Mayonnaise\"\n",
 		},
 		{raw: "(box w:400 h:400 (markup `Test *Test* Test`))", want: "" +
-			"BLOCK -2,0,71,41,\"0\",0,8,8,7,0,\"Test\"\n" +
-			"BLOCK 75,0,72,41,\"0\",0,8,8,7,0,\"Test\"\n" +
-			"BLOCK 77,0,74,41,\"0\",0,8,8,7,0,\"Test\"\n" +
-			"BLOCK 152,0,71,41,\"0\",0,8,8,7,0,\"Test\"\n", rot: "" +
-			"BLOCK 398,0,71,41,\"0\",90,8,8,7,0,\"Test\"\n" +
-			"BLOCK 398,77,72,41,\"0\",90,8,8,7,0,\"Test\"\n" +
-			"BLOCK 400,77,74,41,\"0\",90,8,8,7,0,\"Test\"\n" +
-			"BLOCK 398,154,71,41,\"0\",90,8,8,7,0,\"Test\"\n",
+			"BLOCK 0,0,77,41,\"0\",0,8,8,7,0,\"Test\"\n" +
+			"BLOCK 77,0,78,41,\"0\",0,8,8,7,0,\"Test\"\n" +
+			"BLOCK 78,0,79,41,\"0\",0,8,8,7,0,\"Test\"\n" +
+			"BLOCK 154,0,77,41,\"0\",0,8,8,7,0,\"Test\"\n", rot: "" +
+			"BLOCK 400,0,77,41,\"0\",90,8,8,7,0,\"Test\"\n" +
+			"BLOCK 400,77,78,41,\"0\",90,8,8,7,0,\"Test\"\n" +
+			"BLOCK 401,77,79,41,\"0\",90,8,8,7,0,\"Test\"\n" +
+			"BLOCK 400,154,77,41,\"0\",90,8,8,7,0,\"Test\"\n",
 		},
 	}
 	for _, test := range tests {
