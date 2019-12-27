@@ -4,10 +4,12 @@ package tspl
 
 import (
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/mb0/layla"
 	"github.com/mb0/layla/font"
+	"github.com/mb0/layla/mark"
 	"github.com/mb0/xelf/bfr"
 )
 
@@ -37,7 +39,7 @@ func RenderBfr(b bfr.B, man *font.Manager, n *layla.Node, extra ...string) error
 	}
 	b.WriteString("CLS\n")
 	for _, d := range draw {
-		err = renderNode(b, d, n.Rot, n.H)
+		err = renderNode(lay, b, d, n.Rot, n.H)
 		if err != nil {
 			return err
 		}
@@ -45,7 +47,7 @@ func RenderBfr(b bfr.B, man *font.Manager, n *layla.Node, extra ...string) error
 	return nil
 }
 
-func renderNode(b bfr.B, d *layla.Node, rot int, rh float64) error {
+func renderNode(lay *layla.Layouter, b bfr.B, d *layla.Node, rot int, rh float64) error {
 	if rot != 0 {
 		switch d.Kind {
 		case "rect", "line", "ellipse":
@@ -71,7 +73,7 @@ func renderNode(b bfr.B, d *layla.Node, rot int, rh float64) error {
 	case "text":
 		fsize := fontSize(d)
 		data := strings.Replace(fmt.Sprintf("%q", d.Data), "\\n", "\\[L]", -1)
-		space := d.Font.Line - (font.PtToF(d.Font.Height) * 25.4 * 8 / 72)
+		space := math.Round(d.Font.Line - lay.PtToDot(d.Font.Height))
 		x, w := dot(d.X), dot(d.W)
 		// TODO fix overflow due to discrepancy between font measuring and printing
 		// the reason might be that the tsc printer does not apply kerning?
@@ -87,6 +89,11 @@ func renderNode(b bfr.B, d *layla.Node, rot int, rh float64) error {
 		fmt.Fprintf(b, "BLOCK %d,%d,%d,%d,\"0\",%d,%d,%d,%d,%d,%s\n",
 			dot(d.X-2), dot(d.Y), dot(d.W+4), dot(d.H), rot,
 			fsize, fsize, dot(space), d.Align, data)
+		if d.Font != nil && d.Font.Style&mark.B != 0 {
+			fmt.Fprintf(b, "BLOCK %d,%d,%d,%d,\"0\",%d,%d,%d,%d,%d,%s\n",
+				dot(d.X), dot(d.Y), dot(d.W+6), dot(d.H), rot,
+				fsize, fsize, dot(space), d.Align, data)
+		}
 	case "barcode":
 		fmt.Fprintf(b, "BARCODE %d,%d,%q,%d,%d,%d,%d,%d,%q\n",
 			dot(d.X), dot(d.Y), strings.ToUpper(d.Code.Name), dot(d.H),

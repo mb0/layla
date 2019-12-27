@@ -16,7 +16,7 @@ func TestLayout(t *testing.T) {
 	}{
 		{"Hello world", 66, "Hello world"},
 		{"Hello world", 33, "Hello\nworld"},
-		{"Hello world", 22, "Hell\no wo\nrld"},
+		{"Hello world", 22, "Hell\no w\norld"},
 		{"Tobeornottobe", 22, "Tob\neor\nnott\nobe"},
 		{"To be or not to be", 50, "To be or\nnot to be"},
 		{"To be or_not to be", 50, "To be\nor_not to\nbe"},

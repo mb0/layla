@@ -2,7 +2,6 @@ package font
 
 import (
 	"io/ioutil"
-	"math"
 
 	"github.com/golang/freetype/truetype"
 	"github.com/mb0/xelf/cor"
@@ -54,7 +53,7 @@ func (m *Manager) DotToPt(dot float64) Pt {
 }
 
 func (m *Manager) PtToDot(pt Pt) float64 {
-	return math.Ceil(PtToF(pt) * 25.4 * 8 / m.DPI())
+	return PtToF(pt) * 25.4 * 8 / m.DPI()
 }
 
 func (m *Manager) Err() error {

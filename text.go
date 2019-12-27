@@ -29,7 +29,7 @@ func (l *Layouter) lineLayout(n *Node, stack []*Node) (err error) {
 		return err
 	}
 	s := &splitter{Layouter: l, Font: *of, Max: b.W}
-	res, err := s.lines(els)
+	res, err := s.lines(els, ws)
 	if err != nil {
 		return err
 	}
@@ -56,7 +56,7 @@ func (l *Layouter) lineLayout(n *Node, stack []*Node) (err error) {
 					Kind: "text",
 					Data: sp.Text,
 					Calc: Box{
-						Pos: Pos{X: b.X + x, Y: b.Y + y},
+						Pos: Pos{X: b.X + math.Ceil(x), Y: b.Y + y},
 						Dim: Dim{W: sp.W, H: lh},
 					},
 					Font: of,
@@ -97,7 +97,7 @@ func (l *Layouter) lineHeight(f *Font) (lh, ws float64, _ error) {
 		f.Line = 1.2
 	}
 	if f.Line < 8 {
-		f.Line = math.Ceil(f.Line * l.PtToDot(f.Height))
+		f.Line = math.Round(f.Line * l.PtToDot(f.Height))
 	}
 	wpt := ff.Rune(' ', -1)
 	return f.Line, l.PtToDot(wpt), nil
@@ -109,7 +109,7 @@ type splitter struct {
 	Max float64
 }
 
-func (s *splitter) lines(els []mark.El) (res []line, err error) {
+func (s *splitter) lines(els []mark.El, ws float64) (res []line, err error) {
 	var cur line
 	res = make([]line, 0, len(els)/8)
 	for _, el := range els {
@@ -121,7 +121,7 @@ func (s *splitter) lines(els []mark.El) (res []line, err error) {
 		res, cur = s.spans(f, el.Tag, el.Cont, res, cur)
 	}
 	if len(cur.Spans) > 0 {
-		res = append(res, cur)
+		res = append(res, cur.merge(ws))
 	}
 	return res, nil
 }
@@ -170,7 +170,7 @@ func (s *splitter) splitSpan(f *font.Face, txt string, mw float64) (w float64, _
 func (s *splitter) spanW(f *font.Face, txt string, space bool, ws float64) (ww, w float64) {
 	wpt, _ := f.Text(txt, -1)
 	wpt += f.Extra()
-	ww = s.PtToDot(wpt)
+	ww = math.Ceil(s.PtToDot(wpt))
 	w = ww
 	if space {
 		w += ws

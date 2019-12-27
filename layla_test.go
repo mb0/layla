@@ -28,11 +28,11 @@ func TestLayla(t *testing.T) {
 			`{kind:'rect' x:8 y:8 w:344 h:100}`},
 		{`(markup w:360 "Test *Test* Test")`, `` +
 			`{kind:'text' w:67 h:41 font:{line:41} data:'Test'}` +
-			`{kind:'text' x:77 w:69 h:41 font:{line:41} data:'Test'}` +
-			`{kind:'text' x:156 w:67 h:41 font:{line:41} data:'Test'}`},
+			`{kind:'text' x:77 w:68 h:41 font:{line:41} data:'Test'}` +
+			`{kind:'text' x:154 w:67 h:41 font:{line:41} data:'Test'}`},
 		{`(vbox w:160 pad:[1 1 1 1] (markup w:360 "Test *Test* Test"))`, `` +
 			`{kind:'text' x:1 y:1 w:67 h:41 font:{line:41} data:'Test'}` +
-			`{kind:'text' x:78 y:1 w:69 h:41 font:{line:41} data:'Test'}` +
+			`{kind:'text' x:78 y:1 w:68 h:41 font:{line:41} data:'Test'}` +
 			`{kind:'text' x:1 y:42 w:67 h:41 font:{line:41} data:'Test'}`},
 		{`(vbox w:360 h:360 sub.h:36 (rect)(rect h:72)(rect))`, "" +
 			`{kind:'rect' w:360 h:36}` +
@@ -97,7 +97,6 @@ func TestLayla(t *testing.T) {
 			b.WriteString(dl.String())
 		}
 		if got := b.String(); test.want != "" && got != test.want {
-
 			t.Errorf("for %s\nwant: %s\n got: %s", test.raw, test.want, got)
 		}
 	}
@@ -118,7 +117,7 @@ func TestMeasure(t *testing.T) {
 		{"(text 'Hello')", `{"w":81,"h":41}`, ``},
 		{"(text 'World')", `{"w":91,"h":41}`, ``},
 		{"(markup 'World')", `{"w":91,"h":41}`, ``},
-		{"(markup '*World*')", `{"w":93,"h":41}`, ``},
+		{"(markup '*World*')", `{"w":92,"h":41}`, ``},
 		{"(text 'Hello World')", `{"w":91,"h":82}`, ``},
 		{"(text mar:[1 2 3 4] 'Hello')", `{"w":85,"h":47}`, `{"x":1,"y":2,"w":81,"h":41}`},
 	}

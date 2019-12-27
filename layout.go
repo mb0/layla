@@ -25,7 +25,7 @@ func FakeBoldStyler(m *font.Manager, f Font, t mark.Tag) (*font.Face, error) {
 	}
 	res := &font.Face{ff, 0}
 	if t&mark.B != 0 {
-		res.Add = m.DotToPt(2.4)
+		res.Add = m.DotToPt(1.4)
 	}
 	return res, nil
 }

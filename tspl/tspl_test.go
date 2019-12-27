@@ -1,7 +1,6 @@
 package tspl
 
 import (
-	"bytes"
 	"strings"
 	"testing"
 
@@ -9,7 +8,7 @@ import (
 	"github.com/mb0/layla/font"
 )
 
-func TestRenderBfr(t *testing.T) {
+func TestRenderNode(t *testing.T) {
 	man := font.NewManager(200, 1, 1).RegisterTTF("", "../testdata/font/Go-Regular.ttf")
 	if err := man.Err(); err != nil {
 		t.Fatal(err)
@@ -19,40 +18,70 @@ func TestRenderBfr(t *testing.T) {
 		want string
 		rot  string
 	}{
-		{raw: "(rect x:100 y:80 w:60 h:40 border.w:1)",
+		{raw: "(box w:400 h:400 (rect x:100 y:80 w:60 h:40 border.w:1))",
 			want: "BOX 100,80,160,120,1\n",
 			rot:  "BOX 280,100,320,160,1\n",
 		},
-		{raw: "(ellipse x:100 y:80 w:60 h:40 border.w:2)",
+		{raw: "(box w:400 h:400 (ellipse x:100 y:80 w:60 h:40 border.w:2))",
 			want: "ELLIPSE 100,80,60,40,2\n",
 			rot:  "ELLIPSE 280,100,40,60,2\n",
 		},
+		{raw: "(stage w:5000 h:800 (text align:2 font.size:32 'Smokey Mayonnaise'))",
+			want: "BLOCK -2,0,847,108,\"0\",0,32,32,18,2,\"Smokey Mayonnaise\"\n",
+		},
+		{raw: "(box w:400 h:400 (markup `Test *Test* Test`))", want: "" +
+			"BLOCK -2,0,71,41,\"0\",0,8,8,7,0,\"Test\"\n" +
+			"BLOCK 75,0,72,41,\"0\",0,8,8,7,0,\"Test\"\n" +
+			"BLOCK 77,0,74,41,\"0\",0,8,8,7,0,\"Test\"\n" +
+			"BLOCK 152,0,71,41,\"0\",0,8,8,7,0,\"Test\"\n", rot: "" +
+			"BLOCK 398,0,71,41,\"0\",90,8,8,7,0,\"Test\"\n" +
+			"BLOCK 398,77,72,41,\"0\",90,8,8,7,0,\"Test\"\n" +
+			"BLOCK 400,77,74,41,\"0\",90,8,8,7,0,\"Test\"\n" +
+			"BLOCK 398,154,71,41,\"0\",90,8,8,7,0,\"Test\"\n",
+		},
 	}
 	for _, test := range tests {
-		node, err := layla.Execute(layla.Env, strings.NewReader(test.raw))
+		got, err := render(man, test.raw, false, 400)
 		if err != nil {
-			t.Errorf("execute %v", err)
+			t.Errorf("rot %v", err)
 			continue
 		}
-		var b bytes.Buffer
-		err = renderNode(&b, node, 0, 400)
-		if err != nil {
-			t.Errorf("render %v", err)
-			continue
-		}
-		if got := b.String(); got != test.want {
+		if got != test.want {
 			t.Errorf("want: %s\ngot:  %s", test.want, got)
 		}
 		if test.rot != "" {
-			b.Reset()
-			err = renderNode(&b, node, 90, 400)
+			got, err = render(man, test.raw, true, 400)
 			if err != nil {
 				t.Errorf("render %v", err)
 				continue
 			}
-			if got := b.String(); got != test.rot {
+			if got != test.rot {
 				t.Errorf("want: %s\ngot:  %s", test.rot, got)
 			}
 		}
 	}
+}
+
+func render(man *font.Manager, raw string, rot bool, h float64) (string, error) {
+	node, err := layla.Execute(layla.Env, strings.NewReader(raw))
+	if err != nil {
+		return "", err
+	}
+	lay := &layla.Layouter{man, layla.FakeBoldStyler}
+	draw, err := lay.LayoutAndPage(node)
+	if err != nil {
+		return "", err
+	}
+	var b strings.Builder
+	for _, d := range draw {
+		deg := 0
+		if rot {
+			deg = 90
+		}
+		err = renderNode(lay, &b, d, deg, h)
+		if err != nil {
+			return "", err
+		}
+	}
+	return b.String(), nil
 }
