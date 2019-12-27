@@ -2,11 +2,11 @@ package font
 
 import (
 	"io/ioutil"
+	"math"
 
 	"github.com/golang/freetype/truetype"
 	"github.com/mb0/xelf/cor"
 	"golang.org/x/image/font"
-	"golang.org/x/image/math/fixed"
 )
 
 type Key struct {
@@ -20,36 +20,76 @@ type Src struct {
 }
 
 type Manager struct {
+	dpi   float64
+	subx  int
+	suby  int
 	ttfs  map[string]*Src
 	faces map[Key]font.Face
+	err   error
+}
+
+func NewManager(dpi, subx, suby int) *Manager {
+	return &Manager{dpi: float64(dpi), subx: subx, suby: suby}
+}
+
+func (m *Manager) DPI() float64 {
+	if m.dpi <= 0 {
+		return 72
+	}
+	return m.dpi
+}
+
+func (m *Manager) SubPixels() (x, y int) {
+	if x = m.subx; x <= 0 {
+		x = 2
+	}
+	if y = m.suby; y <= 0 {
+		y = 4
+	}
+	return x, y
+}
+
+func (m *Manager) DotToPt(dot float64) Pt {
+	return PtF(dot * m.DPI() / (25.4 * 8))
+}
+
+func (m *Manager) PtToDot(pt Pt) float64 {
+	return math.Ceil(PtToF(pt) * 25.4 * 8 / m.DPI())
+}
+
+func (m *Manager) Err() error {
+	return m.err
+}
+
+func (m *Manager) fail(err error) error {
+	m.err = err
+	return err
 }
 
 // TODO add font style for bold and italic fonts and use inline styling
-func (m *Manager) RegisterTTF(name string, path string) error {
+func (m *Manager) RegisterTTF(name string, path string) *Manager {
+	if m.err != nil {
+		return m
+	}
 	_, ok := m.ttfs[name]
 	if ok {
-		return nil
+		return m
 	}
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
-		return cor.Errorf("reading file %q: %v", path, err)
+		m.fail(cor.Errorf("reading file %q: %v", path, err))
+		return m
 	}
 	f, err := truetype.Parse(data)
 	if err != nil {
-		return cor.Errorf("parse file %q: %v", path, err)
+		m.fail(cor.Errorf("parse file %q: %v", path, err))
+		return m
 	}
 	if m.ttfs == nil {
 		m.ttfs = make(map[string]*Src)
 	}
 	m.ttfs[name] = &Src{f, path}
-	return nil
-}
-
-func (m *Manager) Close() error {
-	for _, f := range m.faces {
-		f.Close()
-	}
-	return nil
+	return m
 }
 
 func (m *Manager) Path(name string) (string, error) {
@@ -61,6 +101,9 @@ func (m *Manager) Path(name string) (string, error) {
 }
 
 func (m *Manager) Face(name string, size float64) (font.Face, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
 	key := Key{name, size}
 	f, ok := m.faces[key]
 	if ok {
@@ -70,150 +113,16 @@ func (m *Manager) Face(name string, size float64) (font.Face, error) {
 	if !ok {
 		return nil, cor.Errorf("unknown font %q", name)
 	}
-	f = truetype.NewFace(src.Font, &truetype.Options{Size: size})
+	subx, suby := m.SubPixels()
+	f = truetype.NewFace(src.Font, &truetype.Options{
+		Size:       size,
+		DPI:        m.DPI(),
+		SubPixelsX: subx,
+		SubPixelsY: suby,
+	})
 	if m.faces == nil {
 		m.faces = make(map[Key]font.Face)
 	}
 	m.faces[key] = f
 	return f, nil
-}
-
-// TODO make method of manager and pass in font family and size so we can select font styles inline
-func Layout(f font.Face, text string, width int) ([]string, int, int, error) {
-	mw := fixed.I(width)
-	var li, le int
-	var sw, lw, mlw fixed.Int26_6
-	last := rune('\n')
-	var res []string
-	// TODO tokenize using the mark packages inline parser
-	for _, t := range tokens(text) {
-		if t.len == 0 { // hard break
-			if li >= 0 {
-				if lw > mlw {
-					mlw = lw
-				}
-				res = append(res, text[li:le])
-			} else {
-				res = append(res, "")
-			}
-			li = -1
-			sw, lw = 0, 0
-			last = '\n'
-			continue
-		}
-		if li < 0 {
-			li = t.off
-			le = t.off
-		}
-		tx := text[t.off : t.off+t.len]
-		tw, lst := tokWidth(f, tx, last)
-		if tx[0] == ' ' { // spaces
-			sw = tw
-			last = ' '
-			continue
-		} else if lw+sw+tw > mw {
-			if tw > mw { // hard break token
-				for i, c := range tx {
-					a, ok := f.GlyphAdvance(c)
-					if !ok {
-						a, _ = f.GlyphAdvance('x')
-					}
-					ww := a
-					if last != -1 && last != '\n' {
-						ww += f.Kern(last, c)
-					}
-					if lw+ww > mw {
-						if lw > mlw {
-							mlw = lw
-						}
-						res = append(res, text[li:t.off+i])
-						li = t.off + i
-						sw, lw = 0, a
-					} else {
-						sw, lw = 0, lw+sw+a
-					}
-					last = c
-				}
-			} else { // soft break
-				if lw > 0 {
-					if lw > mlw {
-						mlw = lw
-					}
-					res = append(res, text[li:le])
-				}
-				li, le = t.off, 0
-				sw, lw = 0, tw
-			}
-		} else {
-			sw, lw = 0, lw+sw+tw
-		}
-		le = t.off + t.len
-		last = lst
-	}
-	if lw > 0 {
-		if lw > mlw {
-			mlw = lw
-		}
-		res = append(res, text[li:le])
-	}
-	lh := f.Metrics().Height.Ceil()
-	return res, lh, mlw.Ceil(), nil
-}
-
-func tokWidth(f font.Face, text string, last rune) (res fixed.Int26_6, _ rune) {
-	for _, c := range text {
-		a, ok := f.GlyphAdvance(c)
-		if !ok {
-			a, _ = f.GlyphAdvance('x')
-		}
-		if last != -1 && last != '\n' {
-			res += f.Kern(last, c)
-		}
-		res += a
-		last = c
-	}
-	return res, last
-}
-
-type tok struct {
-	off, len int
-}
-
-func tokens(text string) (res []tok) {
-	var start int
-	var space, dash bool
-	for i, c := range text {
-		if c == '\n' {
-			if !space && i > start {
-				res = append(res, tok{start, i - start})
-			}
-			res = append(res, tok{i, 0})
-			space, dash = false, false
-			start = i + 1
-		} else if c == ' ' {
-			if !space {
-				if i > start {
-					res = append(res, tok{start, i - start})
-				}
-				space, dash = true, false
-				start = i
-			}
-		} else if i > start {
-			if space {
-				res = append(res, tok{start, i - start})
-				space, dash = false, false
-				start = i
-			} else if dash {
-				res = append(res, tok{start, i - start})
-				space, dash = false, false
-				start = i
-			} else if c == '-' {
-				dash = true
-			}
-		}
-	}
-	if len(text) > start {
-		res = append(res, tok{start, len(text) - start})
-	}
-	return res
 }

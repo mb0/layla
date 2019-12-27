@@ -1,9 +1,43 @@
 package layla
 
 import (
+	"fmt"
 	"math"
 	"strings"
 )
+
+func Page(n *Node) ([]*Node, error) {
+	p := newPager(n)
+	err := p.collect(n)
+	if err != nil {
+		return nil, err
+	}
+	var res []*Node
+	total := fmt.Sprint(len(p.list))
+	for i, x := range p.list {
+		if i > 0 {
+			res = append(res, &Node{Kind: "page"})
+		}
+		x.page = fmt.Sprint(i + 1)
+		x.total = total
+		if p.Extra != nil {
+			res = x.collect(p.Extra, res, 0)
+		}
+		top := p.Cover
+		if i > 0 {
+			top = p.Header
+		}
+		if top != nil {
+			res = x.collect(top, res, 0)
+		}
+		if p.Footer != nil {
+			offy := x.Y + x.H
+			res = x.collect(p.Footer, res, offy)
+		}
+		res = append(res, x.res...)
+	}
+	return res, nil
+}
 
 type xpage struct {
 	Org float64
@@ -43,7 +77,7 @@ func (x *xpage) collect(n *Node, res []*Node, offy float64) []*Node {
 		res = append(res, d)
 		fallthrough
 	case "stage", "box", "vbox", "hbox", "table", "page",
-		"extra", "cover", "header", "footer":
+		"extra", "cover", "header", "footer", "markup":
 		for _, e := range n.List {
 			res = x.collect(e, res, offy)
 		}
@@ -126,14 +160,13 @@ func (p *pager) collect(n *Node) error {
 				head = head[:len(n.Cols)]
 			}
 			p.THead = head
-
 		}
 		err := p.collectAll(n.List)
 		if hh {
 			p.THead = nil
 		}
 		return err
-	case "stage", "box", "vbox", "hbox", "page":
+	case "stage", "box", "vbox", "hbox", "page", "markup":
 		return p.collectAll(n.List)
 	case "extra", "cover", "header", "footer":
 	}
@@ -173,7 +206,7 @@ func (p *pager) draw(n *Node, m *Off) {
 		switch n.Kind {
 		case "text":
 			txt := strings.Split(n.Data, "\n")
-			lh := n.H / float64(len(txt))
+			lh := n.Font.Line
 			ah := x.H - y
 			hh := 0.0
 			for j := 0; len(txt) > 0; j++ {

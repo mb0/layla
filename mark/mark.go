@@ -2,26 +2,50 @@
 package mark
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/mb0/xelf/cor"
 )
 
+type Tag uint
+
+const (
+	B Tag = 1 << iota
+	I
+	M
+	A
+
+	H1
+	H2
+	H3
+	H4
+	HR
+	P
+
+	Text   = Tag(0)
+	Style  = B | I | M | A
+	Header = H1 | H2 | H3 | H4
+	Block  = HR | P
+	All    = Style | Header | Block
+)
+
 type El struct {
-	Tag  string
+	Tag  Tag
 	Cont string
 	Els  []El
 }
 
-func Parse(txt string) (res []El, err error) {
+func Parse(txt string) ([]El, error)  { return All.Parse(txt) }
+func Inline(txt string) ([]El, error) { return All.Inline(txt) }
+
+func (tag Tag) Parse(txt string) (res []El, err error) {
 	var line string
 	var cont bool
 	for len(txt) > 0 {
 		line, txt = readLine(txt)
 		var el *El
 		switch {
-		case strings.HasPrefix(line, "#"):
+		case tag&Header != 0 && strings.HasPrefix(line, "#"):
 			var c int
 			for c = 1; c < len(line); c++ {
 				if line[c] != '#' {
@@ -29,13 +53,13 @@ func Parse(txt string) (res []El, err error) {
 				}
 			}
 			el = &El{Cont: strings.TrimSpace(line[c:])}
-			if c > 6 {
-				c = 6
+			if c > 4 {
+				c = 4
 			}
-			el.Tag = fmt.Sprintf("h%d", c)
+			el.Tag = H1 << (c - 1)
 			cont = false
-		case strings.HasPrefix(line, "---"):
-			el = &El{Tag: "hr"}
+		case tag&HR != 0 && strings.HasPrefix(line, "---"):
+			el = &El{Tag: HR}
 			line = strings.TrimLeft(line, "-")
 			el.Cont = strings.TrimSpace(line)
 			cont = false
@@ -45,7 +69,7 @@ func Parse(txt string) (res []El, err error) {
 				cont = false
 				continue
 			}
-			els, err := Inline(line)
+			els, err := tag.Inline(line)
 			if err != nil {
 				return res, err
 			}
@@ -54,7 +78,7 @@ func Parse(txt string) (res []El, err error) {
 				el.Els = append(el.Els, els...)
 				continue
 			}
-			el = &El{Tag: "p", Els: els}
+			el = &El{Tag: P, Els: els}
 			cont = true
 		}
 		res = append(res, *el)
@@ -74,11 +98,11 @@ func readLine(txt string) (line, rest string) {
 	return
 }
 
-func Inline(txt string) (res []El, _ error) {
+func (tag Tag) Inline(txt string) (res []El, _ error) {
 	var start, i int
 	for i < len(txt) {
 		c := rune(txt[i])
-		tag, end, ok := inlineStart(c)
+		tag, end, ok := tag.inlineStart(c)
 		switch ok {
 		case true:
 			cont, n := consumeSpan(txt[i:], end)
@@ -87,7 +111,7 @@ func Inline(txt string) (res []El, _ error) {
 			}
 			var link string
 			var nn int
-			if tag == "a" {
+			if tag == A {
 				ii := i + n
 				ii += skipSpace(txt[ii:])
 				if ii >= len(txt) || txt[ii] != '(' {
@@ -105,7 +129,7 @@ func Inline(txt string) (res []El, _ error) {
 			}
 			i += n + nn
 			el := El{Tag: tag, Cont: cont}
-			if tag == "a" {
+			if tag == A {
 				el.Els = []El{{Cont: el.Cont}}
 				el.Cont = link
 			}
@@ -116,7 +140,7 @@ func Inline(txt string) (res []El, _ error) {
 		}
 		for _, c := range txt[i:] {
 			i++
-			if c == ' ' {
+			if cor.Space(c) {
 				break
 			}
 		}
@@ -128,6 +152,20 @@ func Inline(txt string) (res []El, _ error) {
 	return res, nil
 }
 
+func (tag Tag) inlineStart(c rune) (Tag, rune, bool) {
+	switch {
+	case tag&A != 0 && c == '[': // link
+		return A, ']', true
+	case tag&B != 0 && c == '*': // emphasis
+		return B, c, true
+	case tag&I != 0 && c == '_':
+		return I, c, true
+	case tag&B != 0 && c == '`':
+		return M, c, true
+	}
+	return Text, 0, false
+}
+
 func skipSpace(s string) (n int) {
 	for _, c := range s {
 		if !cor.Space(c) {
@@ -136,20 +174,6 @@ func skipSpace(s string) (n int) {
 		n++
 	}
 	return
-}
-
-func inlineStart(c rune) (string, rune, bool) {
-	switch c {
-	case '[': // link
-		return "a", ']', true
-	case '*': // emphasis
-		return "b", c, true
-	case '_':
-		return "i", c, true
-	case '`':
-		return "code", c, true
-	}
-	return "", 0, false
 }
 
 func consumeSpan(txt string, end rune) (string, int) {

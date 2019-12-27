@@ -10,9 +10,8 @@ import (
 )
 
 func TestRenderBfr(t *testing.T) {
-	man := &font.Manager{}
-	err := man.RegisterTTF("", "../testdata/font/Go-Regular.ttf")
-	if err != nil {
+	man := font.NewManager(200, 1, 1).RegisterTTF("", "../testdata/font/Go-Regular.ttf")
+	if err := man.Err(); err != nil {
 		t.Fatal(err)
 	}
 	tests := []struct {

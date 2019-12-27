@@ -17,21 +17,14 @@ import (
 	"github.com/mb0/xelf/lit"
 )
 
-var manager = &font.Manager{}
-
-func init() {
-	fonts := []struct {
-		name, path string
-	}{
-		{"regular", "testdata/font/Go-Regular.ttf"},
-		{"bold", "testdata/font/Go-Bold.ttf"},
+func man() *font.Manager {
+	m := font.NewManager(72, 2, 4).
+		RegisterTTF("regular", "testdata/font/Go-Regular.ttf").
+		RegisterTTF("bold", "testdata/font/Go-Bold.ttf")
+	if err := m.Err(); err != nil {
+		log.Fatal(err)
 	}
-	for _, f := range fonts {
-		err := manager.RegisterTTF(f.name, f.path)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
+	return m
 }
 
 var testFiles = []string{
@@ -43,6 +36,7 @@ var testFiles = []string{
 }
 
 func TestHtml(t *testing.T) {
+	m := man()
 	for _, name := range testFiles {
 		n, err := read(name)
 		if err != nil {
@@ -51,7 +45,7 @@ func TestHtml(t *testing.T) {
 		}
 		var b bytes.Buffer
 		b.WriteString("<body style=\"background-color: grey\">\n")
-		err = html.RenderBfr(&b, manager, n)
+		err = html.RenderBfr(&b, m, n)
 		if err != nil {
 			t.Errorf("render html error: %v", err)
 			continue
@@ -65,13 +59,14 @@ func TestHtml(t *testing.T) {
 }
 
 func TestPdf(t *testing.T) {
+	m := man()
 	for _, name := range testFiles {
 		n, err := read(name)
 		if err != nil {
 			t.Errorf("error reading test file %q: %v", name, err)
 			continue
 		}
-		doc, err := pdf.Render(manager, n)
+		doc, err := pdf.Render(m, n)
 		if err != nil {
 			t.Errorf("render %q error: %v", name, err)
 			continue
@@ -97,7 +92,7 @@ func read(name string) (*layla.Node, error) {
 		{"batch", lit.Str("AB19020501")},
 		{"ingreds", lit.Str("list of all the ingredients, like suger and spice and everthing nice.")},
 	})
-	env := &exp.ParamEnv{exp.NewScope(layla.Env), param}
+	env := &exp.ParamEnv{layla.Env, param}
 	return layla.Execute(env, f)
 }
 

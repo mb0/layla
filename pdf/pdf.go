@@ -14,6 +14,7 @@ import (
 	"github.com/mb0/layla"
 	"github.com/mb0/layla/bcode"
 	"github.com/mb0/layla/font"
+	"github.com/mb0/layla/mark"
 	"github.com/mb0/xelf/cor"
 	"golang.org/x/text/encoding/charmap"
 	"golang.org/x/text/transform"
@@ -72,7 +73,7 @@ func (r Renderer) RenderSubjTo(d *Doc, n *layla.Node, subj string) (*Doc, error)
 			d.Bookmark(subj, 0, 0)
 		}
 	}
-	draw, err := layla.Layout(r.Manager, n)
+	draw, err := layla.LayoutAndPage(r.Manager, n)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +163,11 @@ func (r Renderer) renderNode(d *Doc, n *layla.Node) error {
 	case "text":
 		br := n.Border.Default(0)
 		drawBorder(d, n.Box, br, nil)
-		d.SetFont(n.Font.Name, "", n.Font.Size)
+		style := ""
+		if n.Font.Style&mark.B != 0 {
+			style = "B"
+		}
+		d.SetFont(n.Font.Name, style, n.Font.Size)
 		b := n.Pad.Inset(n.Box)
 		res, err := enc(n.Data)
 		if err != nil {

@@ -1,69 +1,67 @@
 package layla
 
 import (
-	"fmt"
 	"math"
-	"strings"
 
 	"github.com/mb0/layla/font"
+	"github.com/mb0/layla/mark"
 	"github.com/mb0/xelf/cor"
 )
 
-// Layout returns a slice of visible nodes with the layouts applied or an error
-func Layout(m *font.Manager, n *Node) ([]*Node, error) {
-	lay := newLayouter(m, n)
-	_, err := lay.layout(n, n.Box, nil)
+type Styler func(*font.Manager, Font, mark.Tag) (*font.Face, error)
+
+func ZeroStyler(m *font.Manager, f Font, t mark.Tag) (*font.Face, error) {
+	ff, err := m.Face(f.Name, f.Size)
 	if err != nil {
 		return nil, err
 	}
-	p := newPager(n)
-	err = p.collect(n)
+	return &font.Face{ff, 0}, nil
+}
+
+func FakeBoldStyler(m *font.Manager, f Font, t mark.Tag) (*font.Face, error) {
+	ff, err := m.Face(f.Name, f.Size)
 	if err != nil {
 		return nil, err
 	}
-	var res []*Node
-	total := fmt.Sprint(len(p.list))
-	for i, x := range p.list {
-		if i > 0 {
-			res = append(res, &Node{Kind: "page"})
-		}
-		x.page = fmt.Sprint(i + 1)
-		x.total = total
-		if p.Extra != nil {
-			res = x.collect(p.Extra, res, 0)
-		}
-		top := p.Cover
-		if i > 0 {
-			top = p.Header
-		}
-		if top != nil {
-			res = x.collect(top, res, 0)
-		}
-		if p.Footer != nil {
-			offy := x.Y + x.H
-			res = x.collect(p.Footer, res, offy)
-		}
-		res = append(res, x.res...)
+	res := &font.Face{ff, 0}
+	if t&mark.B != 0 {
+		res.Add = m.DotToPt(2.4)
 	}
 	return res, nil
 }
 
-// layouter implements the layout routine and holds required context
-type layouter struct {
-	*font.Manager
-	overflow []*Node
+func LayoutAndPage(m *font.Manager, n *Node) ([]*Node, error) {
+	l := &Layouter{m, ZeroStyler}
+	return l.LayoutAndPage(n)
 }
 
-func newLayouter(m *font.Manager, o *Node) *layouter {
-	return &layouter{Manager: m}
+// Layouter implements the layout routine and holds required context
+type Layouter struct {
+	*font.Manager
+	Styler
+}
+
+// Layout measures and sets the nodes dimensions and position or returns an error
+func (l *Layouter) Layout(n *Node) error {
+	_, err := l.layout(n, n.Box, nil)
+	return err
+}
+
+// LayoutAndPage layouts the node and returns a slice of nodes to draw or an error
+func (l *Layouter) LayoutAndPage(n *Node) ([]*Node, error) {
+	_, err := l.layout(n, n.Box, nil)
+	if err != nil {
+		return nil, err
+	}
+	return Page(n)
 }
 
 // layout sets the calculated absolute box inside the available bounds a and returns
 // the required area including margins.
 // The passed in dimension can be unbounded vertically by setting h <= 0
-func (l *layouter) layout(n *Node, a Box, stack []*Node) (_ Box, err error) {
+func (l *Layouter) layout(n *Node, a Box, stack []*Node) (_ Box, err error) {
 	if a.W <= 0 {
-		return n.Calc, cor.Errorf("layout always needs availible width")
+		return n.Calc, cor.Errorf("layout always needs available width")
 	}
 	m := getMargin(n)
 	ab := m.Inset(a)
@@ -81,7 +79,9 @@ func (l *layouter) layout(n *Node, a Box, stack []*Node) (_ Box, err error) {
 	n.Calc = nb
 	switch n.Kind {
 	case "text":
-		err = l.textLayout(n, stack)
+		err = l.lineLayout(n, stack)
+	case "markup":
+		err = l.lineLayout(n, stack)
 	case "line":
 		n.Calc.W = n.W
 	case "qrcode":
@@ -113,40 +113,7 @@ func (l *layouter) layout(n *Node, a Box, stack []*Node) (_ Box, err error) {
 	}
 	return m.Outset(n.Calc), nil
 }
-func (l *layouter) textLayout(n *Node, stack []*Node) error {
-	stack = append(stack, n)
-	of := getFont(stack)
-	f, err := l.Face(of.Name, of.Size)
-	if err != nil {
-		return cor.Errorf("%v for %q\n\t%d", err, n.Data, len(stack))
-	}
-	b := n.Pad.Inset(n.Calc)
-	cwpt := b.W * 72 / (25.4 * 8)
-	txt, h, mw, err := font.Layout(f, n.Data, int(cwpt))
-	if err != nil {
-		return err
-	}
-	of.Height = float64(h)
-	lf := of.Line
-	if lf <= 0 {
-		lf = 1.2
-	}
-	lh := lf
-	if lh < 8 {
-		lh = math.Ceil(lf * float64(h) * 25.4 * 8 / 72)
-		of.Line = lh
-	}
-	b.H = lh * float64(len(txt))
-	b.W = math.Ceil(float64(mw) * 25.4 * 8 / 72)
-	b = n.Pad.Outset(b)
-	n.Calc.H = clamp(n.Calc.H, b.H)
-	n.Calc.W = clamp(n.Calc.W, b.W)
-	n.Data = strings.Join(txt, "\n")
-	n.Font = of
-	return nil
-}
-
-func (l *layouter) freeLayout(n *Node, stack []*Node) error {
+func (l *Layouter) freeLayout(n *Node, stack []*Node) error {
 	stack = append(stack, n)
 	a := n.Pad.Inset(n.Calc)
 	var h float64
@@ -167,7 +134,7 @@ func (l *layouter) freeLayout(n *Node, stack []*Node) error {
 	}
 	return nil
 }
-func (l *layouter) vboxLayout(n *Node, stack []*Node) error {
+func (l *Layouter) vboxLayout(n *Node, stack []*Node) error {
 	stack = append(stack, n)
 	a := n.Pad.Inset(n.Calc)
 	var h float64
@@ -202,7 +169,7 @@ func (l *layouter) vboxLayout(n *Node, stack []*Node) error {
 	n.Calc.H = clamp(n.Calc.H, h)
 	return nil
 }
-func (l *layouter) hboxLayout(n *Node, stack []*Node) error {
+func (l *Layouter) hboxLayout(n *Node, stack []*Node) error {
 	stack = append(stack, n)
 	a := n.Pad.Inset(n.Calc)
 	var w, h float64
@@ -235,30 +202,8 @@ func (l *layouter) hboxLayout(n *Node, stack []*Node) error {
 	n.Calc.W = clamp(n.Calc.W, w)
 	return nil
 }
-func tableCols(n *Node) {
-	aw := n.Calc.W
-	nw := 0.0
-	for _, c := range n.Cols {
-		if c <= 0 {
-			nw++
-		} else {
-			aw -= c
-		}
-	}
-	if nw > 0 {
-		for i, c := range n.Cols {
-			if c <= 0 {
-				n.Cols[i] = aw / nw
-			}
-		}
-		aw = 0
-	}
-	if aw > 0 {
-		n.Calc.W -= aw
-	}
-}
 
-func (l *layouter) tableLayout(n *Node, stack []*Node) error {
+func (l *Layouter) tableLayout(n *Node, stack []*Node) error {
 	stack = append(stack, n)
 	tableCols(n)
 	a := n.Calc
@@ -293,6 +238,29 @@ func (l *layouter) tableLayout(n *Node, stack []*Node) error {
 		n.Calc.H = clamp(n.Calc.H, a.Y-n.Calc.Y)
 	}
 	return nil
+}
+
+func tableCols(n *Node) {
+	aw := n.Calc.W
+	nw := 0.0
+	for _, c := range n.Cols {
+		if c <= 0 {
+			nw++
+		} else {
+			aw -= c
+		}
+	}
+	if nw > 0 {
+		for i, c := range n.Cols {
+			if c <= 0 {
+				n.Cols[i] = aw / nw
+			}
+		}
+		aw = 0
+	}
+	if aw > 0 {
+		n.Calc.W -= aw
+	}
 }
 
 func clampFill(a, c float64) float64 {

@@ -61,7 +61,7 @@ func init() {
 	nodeSig := []typ.Param{{Name: "tags?"}, {Name: "tail?"}, {Type: t}}
 	listNodes := []string{"stage", "rect", "ellipse", "box", "vbox", "hbox", "table",
 		"page", "extra", "cover", "header", "footer"}
-	dataNodes := []string{"line", "text", "qrcode", "barcode"}
+	dataNodes := []string{"line", "text", "markup", "qrcode", "barcode"}
 	forms = make(map[string]*exp.Spec, len(listNodes)+len(dataNodes))
 	for _, n := range listNodes {
 		forms[n] = &exp.Spec{typ.Form(n, nodeSig),

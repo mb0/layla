@@ -11,36 +11,36 @@ func TestParse(t *testing.T) {
 		res []El
 	}{
 		{"test", []El{
-			{Tag: "p", Els: []El{{Cont: "test"}}},
+			{Tag: P, Els: []El{{Cont: "test"}}},
 		}},
 		{"test\ntest", []El{
-			{Tag: "p", Els: []El{{Cont: "test"}, {Cont: "test"}}},
+			{Tag: P, Els: []El{{Cont: "test"}, {Cont: "test"}}},
 		}},
 		{"test\n\ntest", []El{
-			{Tag: "p", Els: []El{{Cont: "test"}}},
-			{Tag: "p", Els: []El{{Cont: "test"}}},
+			{Tag: P, Els: []El{{Cont: "test"}}},
+			{Tag: P, Els: []El{{Cont: "test"}}},
 		}},
 		{"test\n------\ntest", []El{
-			{Tag: "p", Els: []El{{Cont: "test"}}},
-			{Tag: "hr"},
-			{Tag: "p", Els: []El{{Cont: "test"}}},
+			{Tag: P, Els: []El{{Cont: "test"}}},
+			{Tag: HR},
+			{Tag: P, Els: []El{{Cont: "test"}}},
 		}},
 		{"#title\n###title\n########title\ntest", []El{
-			{Tag: "h1", Cont: "title"},
-			{Tag: "h3", Cont: "title"},
-			{Tag: "h6", Cont: "title"},
-			{Tag: "p", Els: []El{{Cont: "test"}}},
+			{Tag: H1, Cont: "title"},
+			{Tag: H3, Cont: "title"},
+			{Tag: H4, Cont: "title"},
+			{Tag: P, Els: []El{{Cont: "test"}}},
 		}},
 		{"test [Link](url) *test* _test_ `test` test", []El{
-			{Tag: "p", Els: []El{
+			{Tag: P, Els: []El{
 				{Cont: "test "},
-				{Tag: "a", Cont: "url", Els: []El{{Cont: "Link"}}},
+				{Tag: A, Cont: "url", Els: []El{{Cont: "Link"}}},
 				{Cont: " "},
-				{Tag: "b", Cont: "test"},
+				{Tag: B, Cont: "test"},
 				{Cont: " "},
-				{Tag: "i", Cont: "test"},
+				{Tag: I, Cont: "test"},
 				{Cont: " "},
-				{Tag: "code", Cont: "test"},
+				{Tag: M, Cont: "test"},
 				{Cont: " test"},
 			}},
 		}},

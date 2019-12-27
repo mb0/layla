@@ -15,12 +15,13 @@ import (
 	"github.com/mb0/layla"
 	"github.com/mb0/layla/bcode"
 	"github.com/mb0/layla/font"
+	"github.com/mb0/layla/mark"
 	"github.com/mb0/xelf/bfr"
 )
 
 // RenderBfr renders the node n as HTML to b or returns an error.
 func RenderBfr(b bfr.B, man *font.Manager, n *layla.Node) error {
-	draw, err := layla.Layout(man, n)
+	draw, err := layla.LayoutAndPage(man, n)
 	if err != nil {
 		return err
 	}
@@ -83,6 +84,9 @@ func RenderBfr(b bfr.B, man *font.Manager, n *layla.Node) error {
 			fmt.Fprintf(b, "font-family: %s;", d.Font.Name)
 			fmt.Fprintf(b, "font-size: %gpt;", d.Font.Size)
 			fmt.Fprintf(b, "line-height: %gmm;", d.Font.Line/8)
+			if d.Font.Style&mark.B != 0 {
+				fmt.Fprintf(b, "font-weight:bold;")
+			}
 			if d.Border.W > 0 {
 				fmt.Fprintf(b, "border:%gmm solid black;", d.Border.W/8)
 			}

@@ -10,9 +10,8 @@ import (
 )
 
 func TestLayla(t *testing.T) {
-	man := &font.Manager{}
-	err := man.RegisterTTF("", "testdata/font/Go-Regular.ttf")
-	if err != nil {
+	man := font.NewManager(72, 2, 4).RegisterTTF("", "testdata/font/Go-Regular.ttf")
+	if err := man.Err(); err != nil {
 		t.Fatalf("register font error: %v", err)
 	}
 	tests := []struct {
@@ -21,12 +20,20 @@ func TestLayla(t *testing.T) {
 	}{
 		{`(stage w:360 h:360 (rect))`, `{kind:'rect' w:360 h:360}`},
 		{`(rect w:360 h:360 (text 'Hello'))`, `{kind:'rect' w:360 h:360}` +
-			`{kind:'text' w:82 h:41 font:{line:41} data:'Hello'}`},
+			`{kind:'text' w:81 h:41 font:{line:41} data:'Hello'}`},
 		{`(stage w:360 h:360 (rect h:100))`, `{kind:'rect' w:360 h:100}`},
 		{`(stage w:360 h:360 pad:[5 5 5 5] (rect h:100))`,
 			`{kind:'rect' x:5 y:5 w:350 h:100}`},
 		{`(stage w:360 h:360 pad:[5 5 5 5] (rect h:100 mar:[3 3 3 3]))`,
 			`{kind:'rect' x:8 y:8 w:344 h:100}`},
+		{`(markup w:360 "Test *Test* Test")`, `` +
+			`{kind:'text' w:67 h:41 font:{line:41} data:'Test'}` +
+			`{kind:'text' x:77 w:69 h:41 font:{line:41} data:'Test'}` +
+			`{kind:'text' x:156 w:67 h:41 font:{line:41} data:'Test'}`},
+		{`(vbox w:160 pad:[1 1 1 1] (markup w:360 "Test *Test* Test"))`, `` +
+			`{kind:'text' x:1 y:1 w:67 h:41 font:{line:41} data:'Test'}` +
+			`{kind:'text' x:78 y:1 w:69 h:41 font:{line:41} data:'Test'}` +
+			`{kind:'text' x:1 y:42 w:67 h:41 font:{line:41} data:'Test'}`},
 		{`(vbox w:360 h:360 sub.h:36 (rect)(rect h:72)(rect))`, "" +
 			`{kind:'rect' w:360 h:36}` +
 			`{kind:'rect' y:36 w:360 h:72}` +
@@ -52,20 +59,22 @@ func TestLayla(t *testing.T) {
 		{`(vbox w:300 h:300 list:(list (text 'Hello') (text 'World')))`, "" +
 			`{kind:'text' w:300 h:41 font:{line:41} data:'Hello'}` +
 			`{kind:'text' y:41 w:300 h:41 font:{line:41} data:'World'}`},
+		{`(page w:200 h:41 (text 'Page3'))`, "" +
+			`{kind:'text' w:98 h:41 font:{line:41} data:'Page3'}`},
 		{`(page w:200 h:41 (vbox (text 'Page1') (text 'Page2') (text 'Page3')))`, "" +
 			`{kind:'text' w:200 h:41 font:{line:41} data:'Page1'}` +
 			`{kind:'page'}{kind:'text' w:200 h:41 font:{line:41} data:'Page2'}` +
 			`{kind:'page'}{kind:'text' w:200 h:41 font:{line:41} data:'Page3'}`},
 		{`(page w:200 h:41 (text 'Page1\nPage2\nPage3'))`, "" +
-			`{kind:'text' w:99 h:41 font:{line:41} data:'Page1'}` +
-			`{kind:'page'}{kind:'text' w:99 h:41 font:{line:41} data:'Page2'}` +
-			`{kind:'page'}{kind:'text' w:99 h:41 font:{line:41} data:'Page3'}`},
+			`{kind:'text' w:98 h:41 font:{line:41} data:'Page1'}` +
+			`{kind:'page'}{kind:'text' w:98 h:41 font:{line:41} data:'Page2'}` +
+			`{kind:'page'}{kind:'text' w:98 h:41 font:{line:41} data:'Page3'}`},
 		{`(page w:200 h:100 (text 'Page1\nPage2\nPage3'))`, "" +
-			`{kind:'text' w:99 h:82 font:{line:41} data:'Page1\nPage2'}` +
-			`{kind:'page'}{kind:'text' w:99 h:41 font:{line:41} data:'Page3'}`},
+			`{kind:'text' w:98 h:82 font:{line:41} data:'Page1\nPage2'}` +
+			`{kind:'page'}{kind:'text' w:98 h:41 font:{line:41} data:'Page3'}`},
 		{`(page w:200 h:41 (text 'Hello World\nHallo Welt'))`, "" +
-			`{kind:'text' w:181 h:41 font:{line:41} data:'Hello World'}` +
-			`{kind:'page'}{kind:'text' w:181 h:41 font:{line:41} data:'Hallo Welt'}`},
+			`{kind:'text' w:182 h:41 font:{line:41} data:'Hello World'}` +
+			`{kind:'page'}{kind:'text' w:182 h:41 font:{line:41} data:'Hallo Welt'}`},
 	}
 	for _, test := range tests {
 		n, err := ExecuteString(Env, test.raw)
@@ -73,7 +82,8 @@ func TestLayla(t *testing.T) {
 			t.Errorf("exec %s error: %+v", test.raw, err)
 			continue
 		}
-		draw, err := Layout(man, n)
+		lay := &Layouter{man, FakeBoldStyler}
+		draw, err := lay.LayoutAndPage(n)
 		if err != nil {
 			t.Errorf("layout err: %v\n%v", err, n)
 			continue
@@ -87,15 +97,15 @@ func TestLayla(t *testing.T) {
 			b.WriteString(dl.String())
 		}
 		if got := b.String(); test.want != "" && got != test.want {
+
 			t.Errorf("for %s\nwant: %s\n got: %s", test.raw, test.want, got)
 		}
 	}
 }
 
 func TestMeasure(t *testing.T) {
-	man := &font.Manager{}
-	err := man.RegisterTTF("", "testdata/font/Go-Regular.ttf")
-	if err != nil {
+	man := font.NewManager(72, 2, 4).RegisterTTF("", "testdata/font/Go-Regular.ttf")
+	if err := man.Err(); err != nil {
 		t.Fatalf("register font error: %v", err)
 	}
 	tests := []struct {
@@ -105,10 +115,12 @@ func TestMeasure(t *testing.T) {
 	}{
 		{"(stage w:10 h:20)", `{"w":10,"h":20}`, ``},
 		{"(rect w:10 h:20)", `{"w":10,"h":20}`, ``},
-		{"(text 'Hello')", `{"w":82,"h":41}`, ``},
+		{"(text 'Hello')", `{"w":81,"h":41}`, ``},
 		{"(text 'World')", `{"w":91,"h":41}`, ``},
+		{"(markup 'World')", `{"w":91,"h":41}`, ``},
+		{"(markup '*World*')", `{"w":93,"h":41}`, ``},
 		{"(text 'Hello World')", `{"w":91,"h":82}`, ``},
-		{"(text mar:[1 2 3 4] 'Hello')", `{"w":86,"h":47}`, `{"x":1,"y":2,"w":82,"h":41}`},
+		{"(text mar:[1 2 3 4] 'Hello')", `{"w":85,"h":47}`, `{"x":1,"y":2,"w":81,"h":41}`},
 	}
 	for _, test := range tests {
 		n, err := ExecuteString(Env, test.raw)
@@ -116,8 +128,8 @@ func TestMeasure(t *testing.T) {
 			t.Errorf("exec %s error: %+v", test.raw, err)
 			continue
 		}
-		lay := newLayouter(man, n)
-		b, err := lay.layout(n, Box{Dim: Dim{120, 0}}, nil)
+		lay := Layouter{man, FakeBoldStyler}
+		b, err := lay.layout(n, Box{Dim: Dim{100, 0}}, nil)
 		if err != nil {
 			t.Errorf("measure %s error: %+v", test.raw, err)
 			continue

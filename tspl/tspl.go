@@ -17,7 +17,8 @@ func dot(f float64) int {
 
 // RenderBfr renders the node n as TSPL to b or returns an error.
 func RenderBfr(b bfr.B, man *font.Manager, n *layla.Node, extra ...string) error {
-	draw, err := layla.Layout(man, n)
+	lay := &layla.Layouter{man, layla.FakeBoldStyler}
+	draw, err := lay.LayoutAndPage(n)
 	if err != nil {
 		return err
 	}
@@ -70,7 +71,7 @@ func renderNode(b bfr.B, d *layla.Node, rot int, rh float64) error {
 	case "text":
 		fsize := fontSize(d)
 		data := strings.Replace(fmt.Sprintf("%q", d.Data), "\\n", "\\[L]", -1)
-		space := d.Font.Line - (d.Font.Height * 25.4 * 8 / 72)
+		space := d.Font.Line - (font.PtToF(d.Font.Height) * 25.4 * 8 / 72)
 		x, w := dot(d.X), dot(d.W)
 		// TODO fix overflow due to discrepancy between font measuring and printing
 		// the reason might be that the tsc printer does not apply kerning?

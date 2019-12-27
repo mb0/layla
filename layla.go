@@ -1,5 +1,10 @@
 package layla
 
+import (
+	"github.com/mb0/layla/font"
+	"github.com/mb0/layla/mark"
+)
+
 const (
 	AlignLeft = iota
 	AlignRight
@@ -60,12 +65,13 @@ func (o *Off) Outset(b Box) Box {
 	return b
 }
 
-// Font holds all font data related node data
+// Font holds all font related node data
 type Font struct {
-	Name   string  `json:"name,omitempty"`
-	Size   float64 `json:"size,omitempty"`
-	Line   float64 `json:"line,omitempty"`
-	Height float64 `json:"-"`
+	Name   string   `json:"name,omitempty"`
+	Size   float64  `json:"size,omitempty"`
+	Line   float64  `json:"line,omitempty"`
+	Style  mark.Tag `json:"-"`
+	Height font.Pt  `json:"-"`
 }
 
 // NodeLayout holds all layout related node data
