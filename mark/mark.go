@@ -138,13 +138,13 @@ func (tag Tag) Inline(txt string) (res []El, _ error) {
 			continue
 
 		}
+		i++
 		for _, c := range txt[i:] {
-			i++
-			if cor.Space(c) {
+			if !cor.Space(c) {
 				break
 			}
+			i++
 		}
-		i += skipSpace(txt[i:])
 	}
 	if start < len(txt) {
 		res = append(res, El{Cont: txt[start:]})

@@ -27,11 +27,11 @@ func TestLayla(t *testing.T) {
 		{`(stage w:360 h:360 pad:[5 5 5 5] (rect h:100 mar:[3 3 3 3]))`,
 			`{kind:'rect' x:8 y:8 w:344 h:100}`},
 		{`(markup w:360 "Test *Test* Test")`, `` +
-			`{kind:'text' w:67 h:41 font:{line:41} data:'Test'}` +
+			`{kind:'text' w:77 h:41 font:{line:41} data:'Test '}` +
 			`{kind:'text' x:77 w:68 h:41 font:{line:41} data:'Test'}` +
-			`{kind:'text' x:154 w:67 h:41 font:{line:41} data:'Test'}`},
-		{`(vbox w:160 pad:[1 1 1 1] (markup w:360 "Test *Test* Test"))`, `` +
-			`{kind:'text' x:1 y:1 w:67 h:41 font:{line:41} data:'Test'}` +
+			`{kind:'text' x:145 w:77 h:41 font:{line:41} data:' Test'}`},
+		{`(vbox w:150 pad:[1 1 1 1] (markup "Test *Test* Test"))`, `` +
+			`{kind:'text' x:1 y:1 w:77 h:41 font:{line:41} data:'Test '}` +
 			`{kind:'text' x:78 y:1 w:68 h:41 font:{line:41} data:'Test'}` +
 			`{kind:'text' x:1 y:42 w:67 h:41 font:{line:41} data:'Test'}`},
 		{`(vbox w:360 h:360 sub.h:36 (rect)(rect h:72)(rect))`, "" +

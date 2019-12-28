@@ -46,12 +46,12 @@ func TestTokens(t *testing.T) {
 		text string
 		want []string
 	}{
-		{"x y", []string{"x", "y"}},
+		{"x y", []string{"x", " ", "y"}},
 		{"x  \n  y", []string{"x", "", "y"}},
 		{"x  \ny", []string{"x", "", "y"}},
 		{"x  \n  \n  y", []string{"x", "", "", "y"}},
-		{"foo  bar", []string{"foo", "bar"}},
-		{"-o-  bar", []string{"-o-", "bar"}},
+		{"foo  bar", []string{"foo", " ", "bar"}},
+		{"-o-  bar", []string{"-o-", " ", "bar"}},
 		{"foo-bar", []string{"foo-bar"}},
 	}
 	for _, test := range tests {
