@@ -88,7 +88,11 @@ func (l *Layouter) lineLayout(n *Node, stack []*Node) (err error) {
 	b.W = math.Ceil(mw)
 	b = n.Pad.Outset(b)
 	n.Calc.H = clamp(n.Calc.H, b.H)
-	n.Calc.W = clamp(n.Calc.W, b.W)
+	if n.W > 0 {
+		n.Calc.W = clamp(n.Calc.W, n.W)
+	} else {
+		n.Calc.W = clamp(n.Calc.W, b.W)
+	}
 	n.Font = of
 	return nil
 }
