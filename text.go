@@ -50,9 +50,11 @@ func (l *Layouter) lineLayout(n *Node, stack []*Node) (err error) {
 			buf.WriteByte('\n')
 		}
 		var x float64
-		for i, sp := range line.Spans {
+		for _, sp := range line.Spans {
 			w := math.Ceil(sp.W)
-			if markup {
+			if !markup {
+				buf.WriteString(sp.Text)
+			} else if sp.Text != " " {
 				of := of
 				if sp.Tag != 0 {
 					ofv := *of
@@ -68,11 +70,6 @@ func (l *Layouter) lineLayout(n *Node, stack []*Node) (err error) {
 					},
 					Font: of,
 				})
-			} else {
-				if i > 0 {
-					buf.WriteByte(' ')
-				}
-				buf.WriteString(sp.Text)
 			}
 			if x+w > mw {
 				mw = x + w
@@ -142,18 +139,19 @@ type line struct {
 }
 
 func (l line) merge() line {
-	var last *span
-	res := make([]span, 0, len(l.Spans))
-	for _, s := range l.Spans {
-		if last != nil && s.Tag == last.Tag {
-			last.Text += s.Text
-			last.W += s.W
-			continue
-		}
-		res = append(res, s)
-		last = &res[len(res)-1]
-	}
-	return line{res, l.W}
+	return l
+	//var last *span
+	//res := make([]span, 0, len(l.Spans))
+	//for _, s := range l.Spans {
+	//	if last != nil && s.Tag == last.Tag {
+	//		last.Text += s.Text
+	//		last.W += s.W
+	//		continue
+	//	}
+	//	res = append(res, s)
+	//	last = &res[len(res)-1]
+	//}
+	//return line{res, l.W}
 }
 
 type span struct {
