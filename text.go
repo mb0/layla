@@ -282,7 +282,7 @@ func toks(text string) (res []string) {
 				space = true
 			}
 			start = i + 1
-		} else if i > start {
+		} else if i >= start {
 			space = false
 		}
 	}

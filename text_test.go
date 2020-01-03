@@ -46,6 +46,7 @@ func TestTokens(t *testing.T) {
 		text string
 		want []string
 	}{
+		{"Mr. A BC", []string{"Mr.", " ", "A", " ", "BC"}},
 		{"x y", []string{"x", " ", "y"}},
 		{"x  \n  y", []string{"x", "", "y"}},
 		{"x  \ny", []string{"x", "", "y"}},

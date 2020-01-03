@@ -21,6 +21,8 @@ func TestLayla(t *testing.T) {
 		{`(stage w:360 h:360 (rect))`, `{kind:'rect' w:360 h:360}`},
 		{`(rect w:360 h:360 (text 'Hello'))`, `{kind:'rect' w:360 h:360}` +
 			`{kind:'text' w:81 h:41 font:{line:41} data:'Hello'}`},
+		{`(box w:360 h:360 (text 'Mr. A BC'))`,
+			`{kind:'text' w:142 h:41 font:{line:41} data:'Mr. A BC'}`},
 		{`(stage w:360 h:360 (rect h:100))`, `{kind:'rect' w:360 h:100}`},
 		{`(stage w:360 h:360 pad:[5 5 5 5] (rect h:100))`,
 			`{kind:'rect' x:5 y:5 w:350 h:100}`},
