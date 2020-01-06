@@ -128,7 +128,7 @@ func (s *splitter) lines(els []mark.El) (res []line, err error) {
 		res, cur = s.spans(f, el.Tag, el.Cont, res, cur)
 	}
 	if len(cur.Spans) > 0 {
-		res = append(res, cur.merge())
+		res = append(res, cur)
 	}
 	return res, nil
 }
@@ -136,22 +136,6 @@ func (s *splitter) lines(els []mark.El) (res []line, err error) {
 type line struct {
 	Spans []span
 	W     float64
-}
-
-func (l line) merge() line {
-	return l
-	//var last *span
-	//res := make([]span, 0, len(l.Spans))
-	//for _, s := range l.Spans {
-	//	if last != nil && s.Tag == last.Tag {
-	//		last.Text += s.Text
-	//		last.W += s.W
-	//		continue
-	//	}
-	//	res = append(res, s)
-	//	last = &res[len(res)-1]
-	//}
-	//return line{res, l.W}
 }
 
 type span struct {
@@ -182,11 +166,11 @@ func (s *splitter) spanW(f *font.Face, txt string) float64 {
 }
 func (s *splitter) spans(f *font.Face, tag mark.Tag, cont string, res []line, cur line) ([]line, line) {
 	var space bool
-	sdot := s.PtToDot(f.Rune(' ', -1))
+	sdot := s.PtToDot(f.Rune(s.Spacer, -1))
 	for _, txt := range toks(cont) {
 		switch txt {
 		case "":
-			res = append(res, cur.merge())
+			res = append(res, cur)
 			cur = line{}
 			space = false
 			continue
@@ -230,7 +214,7 @@ func (s *splitter) spans(f *font.Face, tag mark.Tag, cont string, res []line, cu
 			for mw := s.Max - cur.W; ws+ww > mw; mw = s.Max {
 				if i > 0 {
 					if len(cur.Spans) > 0 {
-						res = append(res, cur.merge())
+						res = append(res, cur)
 					}
 					cur = line{}
 				}
@@ -247,7 +231,7 @@ func (s *splitter) spans(f *font.Face, tag mark.Tag, cont string, res []line, cu
 			}
 		}
 		if len(cur.Spans) > 0 {
-			res = append(res, cur.merge())
+			res = append(res, cur)
 		}
 		cur = line{W: ww, Spans: []span{{txt, ww, tag}}}
 	}

@@ -22,7 +22,7 @@ func TestLayla(t *testing.T) {
 		{`(rect w:360 h:360 (text 'Hello'))`, `{kind:'rect' w:360 h:360}` +
 			`{kind:'text' w:81 h:41 font:{line:41} data:'Hello'}`},
 		{`(box w:360 h:360 (text 'Mr. A BC'))`,
-			`{kind:'text' w:142 h:41 font:{line:41} data:'Mr. A BC'}`},
+			`{kind:'text' w:140 h:41 font:{line:41} data:'Mr. A BC'}`},
 		{`(stage w:360 h:360 (rect h:100))`, `{kind:'rect' w:360 h:100}`},
 		{`(stage w:360 h:360 pad:[5 5 5 5] (rect h:100))`,
 			`{kind:'rect' x:5 y:5 w:350 h:100}`},
@@ -30,11 +30,11 @@ func TestLayla(t *testing.T) {
 			`{kind:'rect' x:8 y:8 w:344 h:100}`},
 		{`(markup w:360 "Test *Test* Test")`, `` +
 			`{kind:'text' w:67 h:41 font:{line:41} data:'Test'}` +
-			`{kind:'text' x:77 w:68 h:41 font:{line:41} data:'Test'}` +
-			`{kind:'text' x:155 w:67 h:41 font:{line:41} data:'Test'}`},
+			`{kind:'text' x:76 w:68 h:41 font:{line:41} data:'Test'}` +
+			`{kind:'text' x:153 w:67 h:41 font:{line:41} data:'Test'}`},
 		{`(vbox w:150 pad:[1 1 1 1] (markup "Test *Test* Test"))`, `` +
 			`{kind:'text' x:1 y:1 w:67 h:41 font:{line:41} data:'Test'}` +
-			`{kind:'text' x:78 y:1 w:68 h:41 font:{line:41} data:'Test'}` +
+			`{kind:'text' x:77 y:1 w:68 h:41 font:{line:41} data:'Test'}` +
 			`{kind:'text' x:1 y:42 w:67 h:41 font:{line:41} data:'Test'}`},
 		{`(vbox w:360 h:360 sub.h:36 (rect)(rect h:72)(rect))`, "" +
 			`{kind:'rect' w:360 h:36}` +
@@ -75,8 +75,8 @@ func TestLayla(t *testing.T) {
 			`{kind:'text' w:98 h:82 font:{line:41} data:'Page1\nPage2'}` +
 			`{kind:'page'}{kind:'text' w:98 h:41 font:{line:41} data:'Page3'}`},
 		{`(page w:200 h:41 (text 'Hello World\nHallo Welt'))`, "" +
-			`{kind:'text' w:182 h:41 font:{line:41} data:'Hello World'}` +
-			`{kind:'page'}{kind:'text' w:182 h:41 font:{line:41} data:'Hallo Welt'}`},
+			`{kind:'text' w:181 h:41 font:{line:41} data:'Hello World'}` +
+			`{kind:'page'}{kind:'text' w:181 h:41 font:{line:41} data:'Hallo Welt'}`},
 	}
 	for _, test := range tests {
 		n, err := ExecuteString(Env, test.raw)
@@ -84,7 +84,7 @@ func TestLayla(t *testing.T) {
 			t.Errorf("exec %s error: %+v", test.raw, err)
 			continue
 		}
-		lay := &Layouter{man, FakeBoldStyler}
+		lay := &Layouter{man, 'i', FakeBoldStyler}
 		draw, err := lay.LayoutAndPage(n)
 		if err != nil {
 			t.Errorf("layout err: %v\n%v", err, n)
@@ -129,7 +129,7 @@ func TestMeasure(t *testing.T) {
 			t.Errorf("exec %s error: %+v", test.raw, err)
 			continue
 		}
-		lay := Layouter{man, FakeBoldStyler}
+		lay := Layouter{man, 'i', FakeBoldStyler}
 		b, err := lay.layout(n, Box{Dim: Dim{100, 0}}, nil)
 		if err != nil {
 			t.Errorf("measure %s error: %+v", test.raw, err)

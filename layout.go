@@ -31,13 +31,14 @@ func FakeBoldStyler(m *font.Manager, f Font, t mark.Tag) (*font.Face, error) {
 }
 
 func LayoutAndPage(m *font.Manager, n *Node) ([]*Node, error) {
-	l := &Layouter{m, ZeroStyler}
+	l := &Layouter{m, ' ', ZeroStyler}
 	return l.LayoutAndPage(n)
 }
 
 // Layouter implements the layout routine and holds required context
 type Layouter struct {
 	*font.Manager
+	Spacer rune
 	Styler
 }
 

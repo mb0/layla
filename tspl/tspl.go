@@ -19,7 +19,7 @@ func dot(f float64) int {
 
 // RenderBfr renders the node n as TSPL to b or returns an error.
 func RenderBfr(b bfr.B, man *font.Manager, n *layla.Node, extra ...string) error {
-	lay := &layla.Layouter{man, layla.FakeBoldStyler}
+	lay := &layla.Layouter{man, 'i', layla.FakeBoldStyler}
 	draw, err := lay.LayoutAndPage(n)
 	if err != nil {
 		return err

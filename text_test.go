@@ -23,7 +23,7 @@ func TestLayout(t *testing.T) {
 		{"To be or-not to be", 54, "To be or-\nnot to be"},
 		{"To be\nor not\nto be", 50, "To be\nor not\nto be"},
 	}
-	lay := &Layouter{m, ZeroStyler}
+	lay := &Layouter{m, ' ', ZeroStyler}
 	for i, test := range tests {
 		n := &Node{
 			Kind: "text",
