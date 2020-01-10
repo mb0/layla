@@ -14,7 +14,6 @@ import (
 	"github.com/mb0/layla"
 	"github.com/mb0/layla/bcode"
 	"github.com/mb0/layla/font"
-	"github.com/mb0/layla/mark"
 	"github.com/mb0/xelf/cor"
 	"golang.org/x/text/encoding/charmap"
 	"golang.org/x/text/transform"
@@ -163,25 +162,35 @@ func (r Renderer) renderNode(d *Doc, n *layla.Node) error {
 	case "text":
 		br := n.Border.Default(0)
 		drawBorder(d, n.Box, br, nil)
-		style := ""
-		if n.Font.Style&mark.B != 0 {
-			style = "B"
+
+		fsize := n.Font.Size
+		// XXX hack until i figure out the difference in font size between printer and pdf
+		if r.DPI() >= 200 {
+			fsize -= 1
 		}
-		d.SetFont(n.Font.Name, style, n.Font.Size)
+		d.SetFont(n.Font.Name, "", fsize)
 		b := n.Pad.Inset(n.Box)
 		res, err := enc(n.Data)
 		if err != nil {
 			return err
 		}
-		d.SetXY((b.X-8)/8, b.Y/8)
-		align := "LB"
+		x, w, align := b.X, b.W, ""
 		switch n.Align {
 		case layla.AlignRight:
 			align = "RB"
+			x -= 24
+			w += 8
 		case layla.AlignCenter:
 			align = "CB"
+			x -= 8
+			w += 24
+		default:
+			align = "LB"
+			x -= 8
+			w += 24
 		}
-		d.MultiCell((b.W+16)/8, n.Font.Line/8, res, "", align, false)
+		d.SetXY(x/8, b.Y/8)
+		d.MultiCell(w/8, n.Font.Line/8, res, "", align, false)
 	case "barcode", "qrcode":
 		coder := r.Barcoder
 		if coder == nil {
