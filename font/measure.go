@@ -1,6 +1,8 @@
 package font
 
 import (
+	"math"
+
 	"golang.org/x/image/font"
 	"golang.org/x/image/math/fixed"
 )
@@ -20,13 +22,14 @@ func PtToF(pt Pt) float64 {
 }
 
 type Face struct {
+	*Manager
 	font.Face
-	Add Pt
+	Add float64
 }
 
-func (f *Face) Extra() Pt { return f.Add }
+func (f *Face) Extra() float64 { return f.Add }
 
-func (f *Face) Text(text string, last rune) (res Pt, _ rune) {
+func (f *Face) Text(text string, last rune) (res float64, _ rune) {
 	for _, r := range text {
 		a := f.Rune(r, last)
 		res += a
@@ -35,7 +38,8 @@ func (f *Face) Text(text string, last rune) (res Pt, _ rune) {
 	return res, last
 }
 
-func (f *Face) Rune(r, last rune) (res Pt) {
+func (f *Face) Rune(r, last rune) float64 {
+	var res Pt
 	if last != -1 && last != '\n' {
 		res += f.Kern(last, r)
 	}
@@ -44,5 +48,13 @@ func (f *Face) Rune(r, last rune) (res Pt) {
 		a, _ = f.GlyphAdvance('x')
 	}
 	res += a
-	return res
+	d := f.PtToDot(res)
+	switch f.subx {
+	case 1:
+		return math.Floor(d)
+	case 2, 0:
+		return math.Floor(d*2) / 2
+	}
+	subx := float64(f.subx)
+	return math.Floor(d*subx) / subx
 }

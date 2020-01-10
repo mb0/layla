@@ -15,7 +15,7 @@ func ZeroStyler(m *font.Manager, f Font, t mark.Tag) (*font.Face, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &font.Face{ff, 0}, nil
+	return &font.Face{m, ff, 0}, nil
 }
 
 func FakeBoldStyler(m *font.Manager, f Font, t mark.Tag) (*font.Face, error) {
@@ -23,9 +23,9 @@ func FakeBoldStyler(m *font.Manager, f Font, t mark.Tag) (*font.Face, error) {
 	if err != nil {
 		return nil, err
 	}
-	res := &font.Face{ff, 0}
+	res := &font.Face{m, ff, 0}
 	if t&mark.B != 0 {
-		res.Add = m.DotToPt(1.4)
+		res.Add = 1
 	}
 	return res, nil
 }

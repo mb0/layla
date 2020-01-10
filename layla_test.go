@@ -20,22 +20,26 @@ func TestLayla(t *testing.T) {
 	}{
 		{`(stage w:360 h:360 (rect))`, `{kind:'rect' w:360 h:360}`},
 		{`(rect w:360 h:360 (text 'Hello'))`, `{kind:'rect' w:360 h:360}` +
-			`{kind:'text' w:81 h:41 font:{line:41} data:'Hello'}`},
+			`{kind:'text' w:79 h:41 font:{line:41} data:'Hello'}`},
 		{`(box w:360 h:360 (text 'Mr. A BC'))`,
-			`{kind:'text' w:140 h:41 font:{line:41} data:'Mr. A BC'}`},
+			`{kind:'text' w:136 h:41 font:{line:41} data:'Mr. A BC'}`},
 		{`(stage w:360 h:360 (rect h:100))`, `{kind:'rect' w:360 h:100}`},
 		{`(stage w:360 h:360 pad:[5 5 5 5] (rect h:100))`,
 			`{kind:'rect' x:5 y:5 w:350 h:100}`},
 		{`(stage w:360 h:360 pad:[5 5 5 5] (rect h:100 mar:[3 3 3 3]))`,
 			`{kind:'rect' x:8 y:8 w:344 h:100}`},
 		{`(markup w:360 "Test *Test* Test")`, `` +
-			`{kind:'text' w:67 h:41 font:{line:41} data:'Test'}` +
-			`{kind:'text' x:76 w:68 h:41 font:{line:41} data:'Test'}` +
-			`{kind:'text' x:153 w:67 h:41 font:{line:41} data:'Test'}`},
+			`{kind:'text' w:65 h:41 font:{line:41} data:'Test'}` +
+			`{kind:'text' x:73 w:66 h:41 font:{line:41} data:'Test'}` +
+			`{kind:'text' x:147 w:65 h:41 font:{line:41} data:'Test'}`},
 		{`(vbox w:150 pad:[1 1 1 1] (markup "Test *Test* Test"))`, `` +
-			`{kind:'text' x:1 y:1 w:67 h:41 font:{line:41} data:'Test'}` +
-			`{kind:'text' x:77 y:1 w:68 h:41 font:{line:41} data:'Test'}` +
-			`{kind:'text' x:1 y:42 w:67 h:41 font:{line:41} data:'Test'}`},
+			`{kind:'text' x:1 y:1 w:65 h:41 font:{line:41} data:'Test'}` +
+			`{kind:'text' x:74 y:1 w:66 h:41 font:{line:41} data:'Test'}` +
+			`{kind:'text' x:1 y:42 w:65 h:41 font:{line:41} data:'Test'}`},
+		{`(vbox w:300 pad:[26 0 26 0] (box w:300 mar:[50 1 50 1](markup "Test *Test* Test")))`, `` +
+			`{kind:'text' x:76 y:1 w:65 h:41 font:{line:41} data:'Test'}` +
+			`{kind:'text' x:149 y:1 w:66 h:41 font:{line:41} data:'Test'}` +
+			`{kind:'text' x:76 y:42 w:65 h:41 font:{line:41} data:'Test'}`},
 		{`(vbox w:360 h:360 sub.h:36 (rect)(rect h:72)(rect))`, "" +
 			`{kind:'rect' w:360 h:36}` +
 			`{kind:'rect' y:36 w:360 h:72}` +
@@ -62,21 +66,21 @@ func TestLayla(t *testing.T) {
 			`{kind:'text' w:300 h:41 font:{line:41} data:'Hello'}` +
 			`{kind:'text' y:41 w:300 h:41 font:{line:41} data:'World'}`},
 		{`(page w:200 h:41 (text 'Page3'))`, "" +
-			`{kind:'text' w:98 h:41 font:{line:41} data:'Page3'}`},
+			`{kind:'text' w:97 h:41 font:{line:41} data:'Page3'}`},
 		{`(page w:200 h:41 (vbox (text 'Page1') (text 'Page2') (text 'Page3')))`, "" +
 			`{kind:'text' w:200 h:41 font:{line:41} data:'Page1'}` +
 			`{kind:'page'}{kind:'text' w:200 h:41 font:{line:41} data:'Page2'}` +
 			`{kind:'page'}{kind:'text' w:200 h:41 font:{line:41} data:'Page3'}`},
 		{`(page w:200 h:41 (text 'Page1\nPage2\nPage3'))`, "" +
-			`{kind:'text' w:98 h:41 font:{line:41} data:'Page1'}` +
-			`{kind:'page'}{kind:'text' w:98 h:41 font:{line:41} data:'Page2'}` +
-			`{kind:'page'}{kind:'text' w:98 h:41 font:{line:41} data:'Page3'}`},
+			`{kind:'text' w:97 h:41 font:{line:41} data:'Page1'}` +
+			`{kind:'page'}{kind:'text' w:97 h:41 font:{line:41} data:'Page2'}` +
+			`{kind:'page'}{kind:'text' w:97 h:41 font:{line:41} data:'Page3'}`},
 		{`(page w:200 h:100 (text 'Page1\nPage2\nPage3'))`, "" +
-			`{kind:'text' w:98 h:82 font:{line:41} data:'Page1\nPage2'}` +
-			`{kind:'page'}{kind:'text' w:98 h:41 font:{line:41} data:'Page3'}`},
+			`{kind:'text' w:97 h:82 font:{line:41} data:'Page1\nPage2'}` +
+			`{kind:'page'}{kind:'text' w:97 h:41 font:{line:41} data:'Page3'}`},
 		{`(page w:200 h:41 (text 'Hello World\nHallo Welt'))`, "" +
-			`{kind:'text' w:181 h:41 font:{line:41} data:'Hello World'}` +
-			`{kind:'page'}{kind:'text' w:181 h:41 font:{line:41} data:'Hallo Welt'}`},
+			`{kind:'text' w:176 h:41 font:{line:41} data:'Hello World'}` +
+			`{kind:'page'}{kind:'text' w:176 h:41 font:{line:41} data:'Hallo Welt'}`},
 	}
 	for _, test := range tests {
 		n, err := ExecuteString(Env, test.raw)
@@ -116,12 +120,12 @@ func TestMeasure(t *testing.T) {
 	}{
 		{"(stage w:10 h:20)", `{"w":10,"h":20}`, ``},
 		{"(rect w:10 h:20)", `{"w":10,"h":20}`, ``},
-		{"(text 'Hello')", `{"w":81,"h":41}`, ``},
-		{"(text 'World')", `{"w":91,"h":41}`, ``},
-		{"(markup 'World')", `{"w":91,"h":41}`, ``},
-		{"(markup '*World*')", `{"w":92,"h":41}`, ``},
-		{"(text 'Hello World')", `{"w":91,"h":82}`, ``},
-		{"(text mar:[1 2 3 4] 'Hello')", `{"w":85,"h":47}`, `{"x":1,"y":2,"w":81,"h":41}`},
+		{"(text 'Hello')", `{"w":79,"h":41}`, ``},
+		{"(text 'World')", `{"w":89,"h":41}`, ``},
+		{"(markup 'World')", `{"w":89,"h":41}`, ``},
+		{"(markup '*World*')", `{"w":90,"h":41}`, ``},
+		{"(text 'Hello World')", `{"w":89,"h":82}`, ``},
+		{"(text mar:[1 2 3 4] 'Hello')", `{"w":83,"h":47}`, `{"x":1,"y":2,"w":79,"h":41}`},
 	}
 	for _, test := range tests {
 		n, err := ExecuteString(Env, test.raw)

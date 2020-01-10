@@ -145,28 +145,27 @@ type span struct {
 }
 
 func (s *splitter) splitSpan(f *font.Face, txt string, mw float64) (w float64, _, rest string) {
-	mp := s.DotToPt(mw)
-	pt := f.Extra()
+	res := f.Extra()
 	last := rune(-1)
 	for i, r := range txt {
 		wr := f.Rune(r, last)
-		if i > 0 && pt+wr > mp {
-			return s.PtToDot(pt), txt[:i], txt[i:]
+		if i > 0 && res+wr > mw {
+			return res, txt[:i], txt[i:]
 		}
-		pt += wr
+		res += wr
 		last = r
 	}
-	return s.PtToDot(pt), txt, ""
+	return res, txt, ""
 }
 
 func (s *splitter) spanW(f *font.Face, txt string) float64 {
-	wpt, _ := f.Text(txt, -1)
-	wpt += f.Extra()
-	return math.Ceil(s.PtToDot(wpt))
+	w, _ := f.Text(txt, -1)
+	w += f.Extra()
+	return w
 }
 func (s *splitter) spans(f *font.Face, tag mark.Tag, cont string, res []line, cur line) ([]line, line) {
 	var space bool
-	sdot := s.PtToDot(f.Rune(s.Spacer, -1))
+	sdot := f.Rune(s.Spacer, -1)
 	for _, txt := range toks(cont) {
 		switch txt {
 		case "":
@@ -189,8 +188,8 @@ func (s *splitter) spans(f *font.Face, tag mark.Tag, cont string, res []line, cu
 			if ws > 0 {
 				cur.Spans = append(cur.Spans, span{" ", ws, tag})
 			}
-			cur.W += math.Ceil(ws + ww)
 			cur.Spans = append(cur.Spans, span{txt, ww, tag})
+			cur.W += math.Ceil(ws + ww)
 			continue
 		}
 		// check for soft break point
@@ -201,8 +200,8 @@ func (s *splitter) spans(f *font.Face, tag mark.Tag, cont string, res []line, cu
 				if ws > 0 {
 					cur.Spans = append(cur.Spans, span{" ", ws, tag})
 				}
-				cur.W += math.Ceil(ws + wf)
 				cur.Spans = append(cur.Spans, span{fst, wf, tag})
+				cur.W += ws + wf
 				ww, ws = s.spanW(f, snd), 0
 				txt = snd
 			}
@@ -237,7 +236,7 @@ func (s *splitter) spans(f *font.Face, tag mark.Tag, cont string, res []line, cu
 	}
 	if space {
 		cur.Spans = append(cur.Spans, span{" ", sdot, tag})
-		cur.W = sdot
+		cur.W += sdot
 	}
 	return res, cur
 }
