@@ -178,16 +178,16 @@ func (r Renderer) renderNode(d *Doc, n *layla.Node) error {
 		switch n.Align {
 		case layla.AlignRight:
 			align = "RB"
-			x -= 24
+			x -= 16
 			w += 8
 		case layla.AlignCenter:
 			align = "CB"
-			x -= 8
-			w += 24
+			x -= 12
+			w += 12
 		default:
 			align = "LB"
 			x -= 8
-			w += 24
+			w += 16
 		}
 		d.SetXY(x/8, b.Y/8)
 		d.MultiCell(w/8, n.Font.Line/8, res, "", align, false)
