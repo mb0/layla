@@ -95,8 +95,12 @@ func renderNode(lay *layla.Layouter, b bfr.B, d *layla.Node, rot int, rh float64
 				fsize, fsize, dot(space), d.Align, data)
 		}
 	case "barcode":
+		h := dot(d.H)
+		if d.Code.Human != 0 {
+			h -= 20
+		}
 		fmt.Fprintf(b, "BARCODE %d,%d,%q,%d,%d,%d,%d,%d,%q\n",
-			dot(d.X), dot(d.Y), strings.ToUpper(d.Code.Name), dot(d.H),
+			dot(d.X), dot(d.Y), strings.ToUpper(d.Code.Name), h,
 			dot(d.Code.Wide), rot, d.Code.Human, d.Align, d.Data)
 	case "qrcode":
 		fmt.Fprintf(b, "QRCODE %d,%d,%s,%d,A,%d,M2,S7,%q\n",
