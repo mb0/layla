@@ -206,6 +206,9 @@ func (p *pager) draw(n *Node, m *Off) {
 		switch n.Kind {
 		case "text":
 			txt := strings.Split(n.Data, "\n")
+			if len(txt) <= 1 {
+				break
+			}
 			lh := n.Font.Line
 			ah := x.H - y
 			hh := 0.0

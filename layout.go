@@ -225,7 +225,7 @@ func (l *Layouter) tableLayout(n *Node, stack []*Node) error {
 			}
 			c.Calc.W = b.W
 			if eb.H > rh {
-				rh = c.Calc.H
+				rh = eb.H
 			}
 		}
 		for _, c := range r {
